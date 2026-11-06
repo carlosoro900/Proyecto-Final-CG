@@ -1,0 +1,63 @@
+﻿  main_prac01.cpp
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(100,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(100,13): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(101,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(101,13): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(102,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(102,12): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(103,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(103,12): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(104,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(104,12): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(106,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(106,12): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(107,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(107,12): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(108,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(108,12): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(110,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(110,12): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(111,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(111,8): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(112,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(112,12): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(113,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(113,12): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(114,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(114,13): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(115,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(115,14): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(116,3): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+C:\Users\Usuario\source\repos\CG_20271_10\main_prac01.cpp(116,13): warning C4305: 'inicializando': truncamiento de 'double' a 'float'
+main_prac01.obj : error LNK2019: símbolo externo __imp__glewInit@0 sin resolver al que se hace referencia en la función _main
+main_prac01.obj : error LNK2019: símbolo externo _glfwInit sin resolver al que se hace referencia en la función _main
+main_prac01.obj : error LNK2019: símbolo externo _glfwTerminate sin resolver al que se hace referencia en la función _main
+main_prac01.obj : error LNK2019: símbolo externo _glfwGetPrimaryMonitor sin resolver al que se hace referencia en la función "void __cdecl getResolution(void)" (?getResolution@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo _glfwGetVideoMode sin resolver al que se hace referencia en la función "void __cdecl getResolution(void)" (?getResolution@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo _glfwCreateWindow sin resolver al que se hace referencia en la función _main
+main_prac01.obj : error LNK2019: símbolo externo _glfwWindowShouldClose sin resolver al que se hace referencia en la función _main
+main_prac01.obj : error LNK2019: símbolo externo _glfwSetWindowShouldClose sin resolver al que se hace referencia en la función "void __cdecl my_input(struct GLFWwindow *)" (?my_input@@YAXPAUGLFWwindow@@@Z)
+main_prac01.obj : error LNK2019: símbolo externo _glfwSetWindowPos sin resolver al que se hace referencia en la función _main
+main_prac01.obj : error LNK2019: símbolo externo _glfwSetFramebufferSizeCallback sin resolver al que se hace referencia en la función _main
+main_prac01.obj : error LNK2019: símbolo externo _glfwPollEvents sin resolver al que se hace referencia en la función _main
+main_prac01.obj : error LNK2019: símbolo externo _glfwGetKey sin resolver al que se hace referencia en la función "void __cdecl my_input(struct GLFWwindow *)" (?my_input@@YAXPAUGLFWwindow@@@Z)
+main_prac01.obj : error LNK2019: símbolo externo _glfwMakeContextCurrent sin resolver al que se hace referencia en la función _main
+main_prac01.obj : error LNK2019: símbolo externo _glfwSwapBuffers sin resolver al que se hace referencia en la función _main
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewBindBuffer sin resolver al que se hace referencia en la función "void __cdecl myData(void)" (?myData@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewBufferData sin resolver al que se hace referencia en la función "void __cdecl myData(void)" (?myData@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewGenBuffers sin resolver al que se hace referencia en la función "void __cdecl myData(void)" (?myData@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewAttachShader sin resolver al que se hace referencia en la función "void __cdecl setupShaders(void)" (?setupShaders@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewCompileShader sin resolver al que se hace referencia en la función "void __cdecl setupShaders(void)" (?setupShaders@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewCreateProgram sin resolver al que se hace referencia en la función "void __cdecl setupShaders(void)" (?setupShaders@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewCreateShader sin resolver al que se hace referencia en la función "void __cdecl setupShaders(void)" (?setupShaders@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewDeleteShader sin resolver al que se hace referencia en la función "void __cdecl setupShaders(void)" (?setupShaders@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewEnableVertexAttribArray sin resolver al que se hace referencia en la función "void __cdecl myData(void)" (?myData@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewLinkProgram sin resolver al que se hace referencia en la función "void __cdecl setupShaders(void)" (?setupShaders@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewShaderSource sin resolver al que se hace referencia en la función "void __cdecl setupShaders(void)" (?setupShaders@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewUseProgram sin resolver al que se hace referencia en la función _main
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewVertexAttribPointer sin resolver al que se hace referencia en la función "void __cdecl myData(void)" (?myData@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewBindVertexArray sin resolver al que se hace referencia en la función "void __cdecl myData(void)" (?myData@@YAXXZ)
+main_prac01.obj : error LNK2019: símbolo externo __imp____glewGenVertexArrays sin resolver al que se hace referencia en la función "void __cdecl myData(void)" (?myData@@YAXXZ)
+C:\Users\Usuario\source\repos\CG_20271_10\lib\glew32.lib : warning LNK4272: el tipo de máquina de biblioteca 'x64' está en conflicto con el tipo de máquina de destino 'x86'
+C:\Users\Usuario\source\repos\CG_20271_10\lib\glfw3.lib : warning LNK4272: el tipo de máquina de biblioteca 'x64' está en conflicto con el tipo de máquina de destino 'x86'
+C:\Users\Usuario\source\repos\CG_20271_10\Debug\CG_20271_10.exe : fatal error LNK1120: 29 externos sin resolver
