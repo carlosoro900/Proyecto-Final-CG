@@ -1,0 +1,17 @@
+# Modelos y recursos 3D
+resources/objects/
+
+# Archivos de Visual Studio
+.vs/
+x64/
+Debug/
+Release/
+ipch/
+
+# Archivos temporales
+*.obj
+*.pdb
+*.ilk
+*.log
+*.user
+*.suo
