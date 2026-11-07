@@ -12,11 +12,12 @@ C:\Users\Usuario\source\repos\ProyectoFinal\include\modelAnim.h(104,44): warning
 C:\Users\Usuario\source\repos\ProyectoFinal\include\modelAnim.h(520,24): warning C4244: 'inicializando': conversión de 'double' a 'float'; posible pérdida de datos
   (compilando archivo de origen "../20271.cpp")
   
-C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(656,27): warning C4244: '=': conversión de 'Uint64' a 'double'; posible pérdida de datos
-C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(1143,11): warning C4244: '=': conversión de 'double' a 'GLfloat'; posible pérdida de datos
-C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(1144,11): warning C4244: '=': conversión de 'double' a 'GLfloat'; posible pérdida de datos
-C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(1151,10): warning C4244: '=': conversión de 'double' a 'GLfloat'; posible pérdida de datos
-C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(1152,10): warning C4244: '=': conversión de 'double' a 'GLfloat'; posible pérdida de datos
-C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(1160,43): warning C4244: '+=': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(1168,28): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(649,27): warning C4244: '=': conversión de 'Uint64' a 'double'; posible pérdida de datos
+C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(1118,11): warning C4244: '=': conversión de 'double' a 'GLfloat'; posible pérdida de datos
+C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(1119,11): warning C4244: '=': conversión de 'double' a 'GLfloat'; posible pérdida de datos
+C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(1126,10): warning C4244: '=': conversión de 'double' a 'GLfloat'; posible pérdida de datos
+C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(1127,10): warning C4244: '=': conversión de 'double' a 'GLfloat'; posible pérdida de datos
+C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(1135,43): warning C4244: '+=': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\Usuario\source\repos\ProyectoFinal\20271.cpp(1143,28): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+LINK : warning LNK4098: la biblioteca predeterminada'MSVCRT' entra en conflicto con otras bibliotecas; use la biblioteca /NODEFAULTLIB:biblioteca
   ProyectoFinal.vcxproj -> C:\Users\Usuario\source\repos\ProyectoFinal\x64\Debug\ProyectoFinal.exe

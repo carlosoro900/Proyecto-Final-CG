@@ -45,12 +45,12 @@ GLuint VBO[3], VAO[3], EBO[3];
 //Camera
 Camera camera(glm::vec3(0.0f, 10.0f, 3.0f));
 
-float cameraDistance = 20.0f;
-float cameraHeight = 8.0f;
+float cameraDistance = 30.0f;
+float cameraHeight = 10.0f;
 float cameraYaw = 0.0f;
 float cameraPitch = 10.0f;
 
-float mouseSensitivity = 0.5f;
+float mouseSensitivity = 0.4f;
 
 float MovementSpeed = 0.1f;
 GLfloat lastX = SCR_WIDTH / 2.0f,
@@ -528,35 +528,35 @@ int main() {
 
 	// build and compile shaders
 	// -------------------------
-	/*Shader myShader("shaders/shader_texture_color.vs", "shaders/shader_texture_color.fs"); //To use with primitives
+	Shader myShader("shaders/shader_texture_color.vs", "shaders/shader_texture_color.fs"); //To use with primitives
 	Shader staticShader("Shaders/shader_Lights.vs", "Shaders/shader_Lights_mod.fs");	//To use with static models
 	Shader skyboxShader("Shaders/skybox.vs", "Shaders/skybox.fs");	//To use with skybox
-	Shader animShader("Shaders/anim.vs", "Shaders/anim.fs");	//To use with animated models */
+	Shader animShader("Shaders/anim.vs", "Shaders/anim.fs");	//To use with animated models 
 	
 
-	Shader myShader("C:/Users/Usuario/source/repos/CG_20271_10/shaders/shader_texture_color.vs", "C:/Users/Usuario/source/repos/CG_20271_10/shaders/shader_texture_color.fs"); //To use with primitives
+	/*Shader myShader("C:/Users/Usuario/source/repos/CG_20271_10/shaders/shader_texture_color.vs", "C:/Users/Usuario/source/repos/CG_20271_10/shaders/shader_texture_color.fs"); //To use with primitives
 	Shader staticShader("C:/Users/Usuario/source/repos/CG_20271_10/shaders/shader_Lights.vs", "C:/Users/Usuario/source/repos/CG_20271_10/shaders/shader_Lights_mod.fs");	//To use with static models
 	Shader skyboxShader("C:/Users/Usuario/source/repos/CG_20271_10/Shaders/skybox.vs", "C:/Users/Usuario/source/repos/CG_20271_10/Shaders/skybox.fs");	//To use with skybox
 	Shader animShader("C:/Users/Usuario/source/repos/CG_20271_10/Shaders/anim.vs", "C:/Users/Usuario/source/repos/CG_20271_10/Shaders/anim.fs");	//To use with animated models 
+	*/
 	
-	
-	/*vector<std::string> faces{
+	vector<std::string> faces{
 		"resources/skybox/right.jpg",
 		"resources/skybox/left.jpg",
 		"resources/skybox/top.jpg",
 		"resources/skybox/bottom.jpg",
 		"resources/skybox/front.jpg",
 		"resources/skybox/back.jpg"
-	};*/
+	};
 
-	vector<std::string> faces{
+	/*vector<std::string> faces{
 		"C:/Users/Usuario/source/repos/CG_20271_10/resources/skybox/right.jpg",
 		"C:/Users/Usuario/source/repos/CG_20271_10/resources/skybox/left.jpg",
 		"C:/Users/Usuario/source/repos/CG_20271_10/resources/skybox/top.jpg",
 		"C:/Users/Usuario/source/repos/CG_20271_10/resources/skybox/bottom.jpg",
 		"C:/Users/Usuario/source/repos/CG_20271_10/resources/skybox/front.jpg",
 		"C:/Users/Usuario/source/repos/CG_20271_10/resources/skybox/back.jpg"
-	};
+	};*/
 
 	Skybox skybox = Skybox(faces);
 
@@ -568,13 +568,10 @@ int main() {
 	// load models
 	// -----------
 
-	Model piso("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/piso/piso.obj");
-	Model carro("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/lambo/carroceria.obj");
-	Model llanta("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/lambo/Wheel.obj");
-	Model casaVieja("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/casa/OldHouse.obj");
-	//Model catedral("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/DiaDeMuertos/catedral/catedral.obj");
-	//Model cubo("resources/objects/cubo/cube02.obj");
-	Model casaDoll("C:/Users/Usuario/source/repos/ProyectoFinal/resources/objects/esqueleto2/esqueletin.obj");
+	/*Model piso("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/piso/piso.obj");
+	//Model carro("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/lambo/carroceria.obj");
+	//Model llanta("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/lambo/Wheel.obj");
+	//Model casaVieja("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/casa/OldHouse.obj");
 
 	Model CabezaAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/Cabeza.obj");
 	Model CuerpoAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/Cuerpo.obj");
@@ -584,29 +581,23 @@ int main() {
 	Model PiernaDerAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/PiernaDer.obj");
 	Model BotaIzqAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/BotaIzq.obj");
 	Model BotaDerAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/BotaDer.obj");
-
-	Model casaBrujas("C:/Users/Usuario/source/repos/ProyectoFinal/resources/objects/3fantasmas/fantasmas_3.obj");
 	Model catrina("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/DiaDeMuertos/catrina/catrina.obj");
-
-	Model dado("C:/Users/Usuario/source/repos/ProyectoFinal/resources/objects/esqueleto3/esqueletote.obj");
-	Model BoxF1("C:/Users/Usuario/source/repos/ProyectoFinal/resources/objects/iglesia/iglesia.obj");
+	Model Iglesia("C:/Users/Usuario/source/repos/ProyectoFinal/resources/objects/iglesia/iglesia.obj");
 	//catrin.initShaders(animShader.ID);
 
 	ModelAnim animacionPersonaje("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Personaje1/Arm.dae");
 	animacionPersonaje.initShaders(animShader.ID);
 
-	ModelAnim AmyBailando("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Capoeira/Capoeira.dae");
-	AmyBailando.initShaders(animShader.ID);
+	//ModelAnim AmyBailando("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Capoeira/Capoeira.dae");
+	//AmyBailando.initShaders(animShader.ID);*/
 
 
-	/*Model piso("resources/objects/piso/piso.obj");
-	Model carro("resources/objects/lambo/carroceria.obj");
-	Model llanta("resources/objects/lambo/Wheel.obj");
-	Model casaVieja("resources/objects/casa/OldHouse.obj");
-	//Model catedral("resources/objects/DiaDeMuertos/catedral/catedral.obj");
-	//Model cubo("resources/objects/cubo/cube02.obj");
 
-	Model casaDoll("resources/objects/casa/DollHouse.obj");
+	Model piso("resources/objects/piso/piso.obj");
+	//Model carro("resources/objects/lambo/carroceria.obj");
+	//Model llanta("resources/objects/lambo/Wheel.obj");
+	//Model casaVieja("resources/objects/casa/OldHouse.obj");
+
 	Model CabezaAquaman("resources/objects/Aquaman/Cabeza.obj");
 	Model CuerpoAquaman("resources/objects/Aquaman/Cuerpo.obj");
 	Model BrazoIzqAquaman("resources/objects/Aquaman/BrazoIzq.obj");
@@ -615,18 +606,13 @@ int main() {
 	Model PiernaDerAquaman("resources/objects/Aquaman/PiernaDer.obj");
 	Model BotaIzqAquaman("resources/objects/Aquaman/BotaIzq.obj");
 	Model BotaDerAquaman("resources/objects/Aquaman/BotaDer.obj");
-
-	Model casaBrujas("resources/objects/Brujas/CasaBrujas.obj");
 	Model catrina("resources/objects/DiaDeMuertos/catrina/catrina.obj");
-
-	Model BoxF1("resources/objects/CajaF1/Box2.obj");
-	Model dado("resources/objects/dado/dado.obj");
+	Model Iglesia("resources/objects/iglesia/iglesia.obj");
+	//catrin.initShaders(animShader.ID);
 
 	ModelAnim animacionPersonaje("resources/objects/Personaje1/Arm.dae");
 	animacionPersonaje.initShaders(animShader.ID);
-	
-	ModelAnim AmyBailando("resources/objects/Capoeira/Capoeira.dae");
-	AmyBailando.initShaders(animShader.ID);*/
+
 
 
 	//Inicialización de KeyFrames
@@ -692,23 +678,15 @@ int main() {
 		staticShader.setFloat("pointLight[1].quadratic", 0.00000032f);
 
 		staticShader.setVec3("pointLight[2].position", lightPosition02);
-		staticShader.setVec3("pointLight[2].ambient", glm::vec3(0.3f, 0.3f, 0.3f));
-		staticShader.setVec3("pointLight[2].diffuse", glm::vec3(0.9f, 0.0f, 0.0f));
-		staticShader.setVec3("pointLight[2].specular", colorDeLaLuz);
+		staticShader.setVec3("pointLight[2].ambient", glm::vec3(0.0f, 0.f, 0.0f));
+		staticShader.setVec3("pointLight[2].diffuse", glm::vec3(0.0f, 0.0f, 0.0f));
+		staticShader.setVec3("pointLight[2].specular", glm::vec3(0.0f, 0.0f, 0.0f));
 		staticShader.setFloat("pointLight[2].constant", 1.0f);
 		staticShader.setFloat("pointLight[2].linear", 0.009f);
 		staticShader.setFloat("pointLight[2].quadratic", 0.00000032f);
 
-		staticShader.setVec3("pointLight[3].position", lightPosition02);
-		staticShader.setVec3("pointLight[3].ambient", glm::vec3(0.3f, 0.3f, 0.3f));
-		staticShader.setVec3("pointLight[3].diffuse", glm::vec3(0.9f, 0.0f, 0.0f));
-		staticShader.setVec3("pointLight[3].specular", colorDeLaLuz);
-		staticShader.setFloat("pointLight[3].constant", 1.0f);
-		staticShader.setFloat("pointLight[3].linear", 0.009f);
-		staticShader.setFloat("pointLight[3].quadratic", 0.00000032f);
-
-		staticShader.setVec3("spotLight[0].position", glm::vec3(0.0f, 20.0f, 10.0f));
-		staticShader.setVec3("spotLight[0].direction", glm::vec3(0.0f, -1.0f, 0.0f));
+		staticShader.setVec3("spotLight[0].position", glm::vec3(0.0f, 0.0f, 0.0f));
+		staticShader.setVec3("spotLight[0].direction", glm::vec3(0.0f, 0.0f, 0.0f));
 		staticShader.setVec3("spotLight[0].ambient", glm::vec3(0.0f, 0.0f, 0.0f));
 		staticShader.setVec3("spotLight[0].diffuse", glm::vec3(0.0f, 0.0f, 0.0f));
 		staticShader.setVec3("spotLight[0].specular", glm::vec3(0.0f, 0.0f, 0.0f));
@@ -827,25 +805,13 @@ int main() {
 
 		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(300.0f, 0.0f, 25.0f));
 		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(4.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(5.0f));
 		staticShader.setMat4("model", modelOp);
-		BoxF1.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(300.0f, 2.0f, 25.0f));
-		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.7f));
-		staticShader.setMat4("model", modelOp);
-		casaDoll.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(lightPosition01));
-		modelOp = glm::rotate(modelOp, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.7f));
-		staticShader.setMat4("model", modelOp);
-		casaBrujas.Draw(staticShader);
+		Iglesia.Draw(staticShader);
 
 		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(90.0f, 0.0f, -60.0f));
 		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.8f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.4f));
 		staticShader.setMat4("model", modelOp);
 		catrina.Draw(staticShader);
 
@@ -883,12 +849,6 @@ int main() {
 		modelOp = glm::translate(refCuerpoAquaman, glm::vec3(0.5f, -0.9f, 0.0f));
 		staticShader.setMat4("model", modelOp);
 		BotaIzqAquaman.Draw(staticShader);
-		
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, -10.0f));
-		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		staticShader.setMat4("model", modelOp);
-		dado.Draw(staticShader);
 
 		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, -10.0f));
 		modelOp = glm::scale(modelOp, glm::vec3(0.2f));
