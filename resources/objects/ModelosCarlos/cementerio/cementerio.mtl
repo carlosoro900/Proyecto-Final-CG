@@ -1,0 +1,128 @@
+# 3ds Max Wavefront OBJ Exporter v0.99 - (c)2007 guruware
+# File Created: 09.11.2026 03:57:32
+
+newmtl Mogila_tipA_LP
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 1.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Mogila_tipA_LP_baseColor.png
+	map_Pr Mogila_tipA_LP_metallicRoughness_G.png
+	map_Pm Mogila_tipA_LP_metallicRoughness_B.png
+	norm Mogila_tipA_LP_normal.png
+
+newmtl Mogila_tipB
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 1.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Mogila_tipB_baseColor.png
+	map_Pr Mogila_tipB_metallicRoughness_G.png
+	map_Pm Mogila_tipB_metallicRoughness_B.png
+	norm Mogila_tipB_normal.png
+
+newmtl LP_tip_c
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 1.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd LP_tip_c_baseColor.png
+	map_Pr LP_tip_c_metallicRoughness_G.png
+	map_Pm LP_tip_c_metallicRoughness_B.png
+	norm LP_tip_c_normal.png
+
+newmtl Grave_Tip_D_LP
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 1.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Grave_Tip_D_LP_baseColor.png
+	map_Pr Grave_Tip_D_LP_metallicRoughness_G.png
+	map_Pm Grave_Tip_D_LP_metallicRoughness_B.png
+	norm Grave_Tip_D_LP_normal.png
+
+newmtl Graund_grave
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 1.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Graund_grave_baseColor.png
+	map_Pr Graund_grave_metallicRoughness_G.png
+	map_Pm Graund_grave_metallicRoughness_B.png
+	norm Graund_grave_normal.png
+
+newmtl sarcophagus_tip_A
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 1.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd sarcophagus_tip_A_baseColor.png
+	map_Pr sarcophagus_tip_A_metallicRoughness_G.png
+	map_Pm sarcophagus_tip_A_metallicRoughness_B.png
+	norm sarcophagus_tip_A_normal.png
+
+newmtl sarcophagus_tip_B
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 1.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd sarcophagus_tip_B_baseColor.png
+	map_Pr sarcophagus_tip_B_metallicRoughness_G.png
+	map_Pm sarcophagus_tip_B_metallicRoughness_B.png
+	norm sarcophagus_tip_B_normal.png
