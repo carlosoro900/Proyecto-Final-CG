@@ -9,7 +9,11 @@ Release/
 ipch/
 
 # Archivos temporales
-*.obj
+ofrenda1.obj
+#exHacienda.obj
+exHacienda1.obj
+exHacienda2.obj
+#exHacienda3.obj
 *.pdb
 *.ilk
 *.log

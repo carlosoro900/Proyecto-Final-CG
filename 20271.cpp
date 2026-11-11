@@ -1,8 +1,8 @@
 /*---------------------------------------------------------*/
-/* ----------------   Práctica  --------------------------*/
-/*-----------------    2027-1   ---------------------------*/
-/*------------- Alumno:     Orozco Eleuterio José Carlos                ---------------*/
-/*------------- No. Cuenta    316050717              ---------------*/
+/* ----------------   Proyecto Final  --------------------------*/
+
+/*-----Alumnos:     Orozco Eleuterio José Carlos  , Gustavo  ,  Hanny              ---------------*/
+/*----No. Cuenta:    316050717   ,         ,                      ---------------*/
 
 #include <Windows.h>
 
@@ -26,6 +26,9 @@
 #include <Skybox.h>
 #include <iostream>
 #include <mmsystem.h>
+#include <fstream>
+//#include <iostream>
+#include <string>
 
 
 
@@ -34,6 +37,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void my_input(GLFWwindow* window, int key, int scancode, int action, int mods);
 void animate(void);
+void moverCamaraCenital(GLFWwindow* window);
 
 // settings
 unsigned int SCR_WIDTH = 800;
@@ -56,6 +60,11 @@ float MovementSpeed = 0.1f;
 GLfloat lastX = SCR_WIDTH / 2.0f,
 		lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
+
+// Vista cenital (plano visto desde arriba)
+bool vistaCenital = false;					// Se activa/desactiva con la tecla V
+float zoomCenital = 200.0f;					// Mitad de la altura visible, en unidades del mundo
+glm::vec2 centroCenital(200.0f, -10.0f);	// Punto (X, Z) del escenario que mira la vista cenital
 
 //Timing
 const int FPS = 60;
@@ -119,16 +128,36 @@ recorrido4 = false;
 
 
 //Keyframes (Manipulación y dibujo)
-float	posX = 0.0f,
+float	posX = -200.0f,
 		posY = 2.0f,
-		posZ = 0.0f,
+		posZ = 100.0f,
 		rotRodIzq = 0.0f,
-		giroMonito = 180.0f;
+		giroMonito = 180.0f,
+		rotBrazoDer = 0.0f,
+		rotBrazoIzq = 0.0f,
+		rotPiernaDer = 0.0f,
+		rotPiernaIzq = 0.0f,
+		rotCabezaSi = 0.0f,
+		rotCabezaNo = 0.0f;
+
+float tiempoCaminata = 0.0f;
+//float velocidadCaminata = 0.02f;
+float anguloMaximo = 80.0f;
+float anguloCaminata = 0.0f;
+float velocidadCaminata = 2.0f;
+float direccionCaminata = 1.0f;
+
 float	incX = 0.0f,
 		incY = 0.0f,
 		incZ = 0.0f,
 		rotRodIzqInc = 0.0f,
-		giroMonitoInc = 0.0f;
+		giroMonitoInc = 0.0f,
+		rotBrazoDerInc= 0.0f,
+		rotBrazoIzqInc = 0.0f,
+		rotPiernaDerInc = 0.0f,
+		rotPiernaIzqInc = 0.0f,
+		rotCabezaSiInc = 0.0f,
+		rotCabezaNoInc = 0.0f;
 
 bool perspect = false;
 
@@ -143,6 +172,12 @@ typedef struct _frame
 	float posZ;		//Variable para PosicionZ
 	float rotRodIzq;
 	float giroMonito;
+	float rotBrazoDer;
+	float rotBrazoIzq;
+	float rotPiernaDer;
+	float rotPiernaIzq;
+	float rotCabezaSi;
+	float rotCabezaNo;
 
 }FRAME;
 
@@ -229,19 +264,12 @@ unsigned int generateTextures(const char* filename, bool alfa, bool isPrimitive)
 void LoadTextures()
 {
 
-	/*t_smile = generateTextures("Texturas/awesomeface.png", 1, true);
+	t_smile = generateTextures("Texturas/awesomeface.png", 1, true);
 	t_toalla = generateTextures("Texturas/toalla.tga", 0, true);
 	t_unam = generateTextures("Texturas/escudo_unam.jpg", 0, true);
 	t_ladrillos = generateTextures("Texturas/bricks.jpg", 0, true);
 	//This must be the last
-	t_white = generateTextures("Texturas/white.jpg", 0, false);*/
-
-	t_smile = generateTextures("C:/Users/Usuario/source/repos/CG_20271_10/Texturas/awesomeface.png", 1, true);
-	t_toalla = generateTextures("C:/Users/Usuario/source/repos/CG_20271_10/Texturas/toalla.tga", 0, true);
-	t_unam = generateTextures("C:/Users/Usuario/source/repos/CG_20271_10/Texturas/escudo_unam.jpg", 0, true);
-	t_ladrillos = generateTextures("C:/Users/Usuario/source/repos/CG_20271_10/Texturas/bricks.jpg", 0, true);
-	//This must be the last
-	t_white = generateTextures("C:/Users/Usuario/source/repos/CG_20271_10/Texturas/white.jpg", 0, false);
+	t_white = generateTextures("Texturas/white.jpg", 0, false);
 }
 
 
@@ -305,6 +333,11 @@ void animate(void)
 	
 
 	if (perspect == true) {
+		//float i, 
+		//	g = 0;
+		//bool permiso_giro = true;
+		
+
 		// Convertir el giro del personaje a radianes
 		float angle = glm::radians(giroMonito);
 
@@ -325,8 +358,39 @@ void animate(void)
 		// Orientar la cámara hacia el objetivo
 		camera.Front = glm::normalize(target - camera.Position);
 
+		// ANIMACIÓN DE CAMINAR
+
+		// Actualizar ángulo
+		anguloCaminata += direccionCaminata * velocidadCaminata * deltaTime;
+
+		// Limitar el movimiento entre -60 y 60
+		if (anguloCaminata >= 60.0f) {
+			anguloCaminata = 60.0f;
+			direccionCaminata = -1.0f;
+		}
+		else if (anguloCaminata <= -60.0f) {
+			anguloCaminata = -60.0f;
+			direccionCaminata = 1.0f;
+		}
+
+		// Alternar brazos
+		rotBrazoDer = anguloCaminata;
+		rotBrazoIzq = -anguloCaminata;
+
+		// Alternar piernas
+		rotPiernaDer = -anguloCaminata;
+		rotPiernaIzq = anguloCaminata;
+
+		perspect = false;
 	}
 	else {
+
+		/*int i,
+			g = 0;
+		bool permiso_giro = true;*/
+
+		
+
 		// Convertir el giro del personaje a radianes
 		float angle = glm::radians(giroMonito);
 
@@ -346,6 +410,7 @@ void animate(void)
 
 		// Orientar la cámara hacia el objetivo
 		camera.Front = glm::normalize(target - camera.Position);
+
 
 	}
 	//Vehículo
@@ -353,6 +418,23 @@ void animate(void)
 	{
 		movAuto_x += 3.0f;
 	}
+
+
+}
+
+// Movimiento de la cámara en la vista cenital (se llama una vez por frame)
+void moverCamaraCenital(GLFWwindow* window)
+{
+	float paso = zoomCenital * 0.02f;	// más lento cuando el plano está más cerca
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		centroCenital.y -= paso;		// arriba en pantalla = -Z
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		centroCenital.y += paso;
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		centroCenital.x += paso;		// derecha en pantalla = +X
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		centroCenital.x -= paso;
 }
 
 void getResolution() {
@@ -484,29 +566,67 @@ void myData() {
 	glBindVertexArray(0);
 }
 
-int main() {
-	// glfw: initialize and configure
-	glfwInit();
+bool comprobarArchivo(const std::string& ruta)
+{
+	std::ifstream archivo(ruta, std::ios::binary);
 
-	// glfw window creation
+	if (!archivo.is_open())
+	{
+		std::cout << "[ERROR] No se pudo abrir: "
+			<< ruta << std::endl;
+
+		return false;
+	}
+
+	std::cout << "[OK] Archivo encontrado y abierto: "
+		<< ruta << std::endl;
+
+	archivo.close();
+
+	return true;
+}
+
+int main() {
+	// Inicializar GLFW
+	if (!glfwInit())
+	{
+		std::cout << "Error al inicializar GLFW" << std::endl;
+		return -1;
+	}
+
+	// Obtener resolución del monitor
 	monitors = glfwGetPrimaryMonitor();
 	getResolution();
 
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Pratica X 2027-1", NULL, NULL);
-	if (window == NULL) {
+	// Obtener modo de video
+	const GLFWvidmode* mode = glfwGetVideoMode(monitors);
+
+	// Crear ventana en pantalla completa
+	GLFWwindow* window = glfwCreateWindow(
+		mode->width,
+		mode->height,
+		"Proyecto Final - OpenGL",
+		monitors,
+		nullptr
+	);
+
+	if (window == NULL)
+	{
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
 		return -1;
 	}
-	glfwSetWindowPos(window, 0, 30);
+
 	glfwMakeContextCurrent(window);
+
+	// Registrar callbacks
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, my_input);
 
-	// tell GLFW to capture our mouse
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	// Capturar el mouse como Minecraft
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
@@ -515,6 +635,12 @@ int main() {
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
+
+	// Capturar el mouse
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	std::cout << "Ancho: " << SCR_WIDTH << std::endl;
+	std::cout << "Alto: " << SCR_HEIGHT << std::endl;
 
 	// configure global opengl state
 	// -----------------------------
@@ -533,12 +659,6 @@ int main() {
 	Shader skyboxShader("Shaders/skybox.vs", "Shaders/skybox.fs");	//To use with skybox
 	Shader animShader("Shaders/anim.vs", "Shaders/anim.fs");	//To use with animated models 
 	
-
-	/*Shader myShader("C:/Users/Usuario/source/repos/CG_20271_10/shaders/shader_texture_color.vs", "C:/Users/Usuario/source/repos/CG_20271_10/shaders/shader_texture_color.fs"); //To use with primitives
-	Shader staticShader("C:/Users/Usuario/source/repos/CG_20271_10/shaders/shader_Lights.vs", "C:/Users/Usuario/source/repos/CG_20271_10/shaders/shader_Lights_mod.fs");	//To use with static models
-	Shader skyboxShader("C:/Users/Usuario/source/repos/CG_20271_10/Shaders/skybox.vs", "C:/Users/Usuario/source/repos/CG_20271_10/Shaders/skybox.fs");	//To use with skybox
-	Shader animShader("C:/Users/Usuario/source/repos/CG_20271_10/Shaders/anim.vs", "C:/Users/Usuario/source/repos/CG_20271_10/Shaders/anim.fs");	//To use with animated models 
-	*/
 	
 	vector<std::string> faces{
 		"resources/skybox/right.jpg",
@@ -549,14 +669,6 @@ int main() {
 		"resources/skybox/back.jpg"
 	};
 
-	/*vector<std::string> faces{
-		"C:/Users/Usuario/source/repos/CG_20271_10/resources/skybox/right.jpg",
-		"C:/Users/Usuario/source/repos/CG_20271_10/resources/skybox/left.jpg",
-		"C:/Users/Usuario/source/repos/CG_20271_10/resources/skybox/top.jpg",
-		"C:/Users/Usuario/source/repos/CG_20271_10/resources/skybox/bottom.jpg",
-		"C:/Users/Usuario/source/repos/CG_20271_10/resources/skybox/front.jpg",
-		"C:/Users/Usuario/source/repos/CG_20271_10/resources/skybox/back.jpg"
-	};*/
 
 	Skybox skybox = Skybox(faces);
 
@@ -568,35 +680,10 @@ int main() {
 	// load models
 	// -----------
 
-	/*Model piso("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/piso/piso.obj");
-	//Model carro("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/lambo/carroceria.obj");
-	//Model llanta("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/lambo/Wheel.obj");
-	//Model casaVieja("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/casa/OldHouse.obj");
-
-	Model CabezaAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/Cabeza.obj");
-	Model CuerpoAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/Cuerpo.obj");
-	Model BrazoIzqAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/BrazoIzq.obj");
-	Model BrazoDerAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/BrazoDer.obj");
-	Model PiernaIzqAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/PiernaIzq.obj");
-	Model PiernaDerAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/PiernaDer.obj");
-	Model BotaIzqAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/BotaIzq.obj");
-	Model BotaDerAquaman("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Aquaman/BotaDer.obj");
-	Model catrina("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/DiaDeMuertos/catrina/catrina.obj");
-	Model Iglesia("C:/Users/Usuario/source/repos/ProyectoFinal/resources/objects/iglesia/iglesia.obj");
-	//catrin.initShaders(animShader.ID);
-
-	ModelAnim animacionPersonaje("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Personaje1/Arm.dae");
-	animacionPersonaje.initShaders(animShader.ID);
-
-	//ModelAnim AmyBailando("C:/Users/Usuario/source/repos/CG_20271_10/resources/objects/Capoeira/Capoeira.dae");
-	//AmyBailando.initShaders(animShader.ID);*/
 
 
-
-	Model piso("resources/objects/piso/piso.obj");
-	//Model carro("resources/objects/lambo/carroceria.obj");
-	//Model llanta("resources/objects/lambo/Wheel.obj");
-	//Model casaVieja("resources/objects/casa/OldHouse.obj");
+	Model piso("resources/objects/ModelosGustavo/Piso3.obj");
+	comprobarArchivo("resources/objects/ModelosGustavo/Piso3.obj");
 
 	Model CabezaAquaman("resources/objects/Aquaman/Cabeza.obj");
 	Model CuerpoAquaman("resources/objects/Aquaman/Cuerpo.obj");
@@ -607,7 +694,16 @@ int main() {
 	Model BotaIzqAquaman("resources/objects/Aquaman/BotaIzq.obj");
 	Model BotaDerAquaman("resources/objects/Aquaman/BotaDer.obj");
 	Model catrina("resources/objects/DiaDeMuertos/catrina/catrina.obj");
-	Model Iglesia("resources/objects/iglesia/iglesia.obj");
+	Model Hacienda("resources/objects/ModelosHanny/Hacienda/exHacienda2.obj");
+	comprobarArchivo("resources/objects/ModelosHanny/Hacienda/exHacienda2.obj");
+	Model Pasillo("resources/objects/ModelosCarlos/pasillo_cementerio/pasillo.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/pasillo_cementerio/pasillo.obj");
+	Model Paredes("resources/objects/ModelosCarlos/pasillo_cementerio/paredes.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/pasillo_cementerio/paredes.obj");
+	Model Cementerio("resources/objects/ModelosCarlos/pasillo_cementerio/cementerio.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/pasillo_cementerio/cementerio.obj");
+	Model Tumbas("resources/objects/ModelosCarlos/cementerio/cementerio.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/cementerio/cementerio.obj");
 	//catrin.initShaders(animShader.ID);
 
 	ModelAnim animacionPersonaje("resources/objects/Personaje1/Arm.dae");
@@ -648,7 +744,28 @@ int main() {
 
 		// render
 		// ------
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// render
+		// Selección de cámara: vista normal (tercera persona) o vista cenital (ortográfica)
+		glm::vec3 posCamara;
+		if (vistaCenital)
+		{
+			moverCamaraCenital(window);
+			float aspecto = (float)SCR_WIDTH / (float)SCR_HEIGHT;
+			posCamara = glm::vec3(centroCenital.x, 500.0f, centroCenital.y);
+			// up = -Z: el norte (-Z) queda hacia arriba en pantalla y +X hacia la derecha
+			viewOp = glm::lookAt(posCamara, glm::vec3(centroCenital.x, 0.0f, centroCenital.y), glm::vec3(0.0f, 0.0f, -1.0f));
+			projectionOp = glm::ortho(-zoomCenital * aspecto, zoomCenital * aspecto, -zoomCenital, zoomCenital, 0.1f, 2000.0f);
+			glClearColor(0.12f, 0.12f, 0.14f, 1.0f);
+		}
+		else
+		{
+			posCamara = camera.Position;
+			viewOp = camera.GetViewMatrix();
+			projectionOp = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
+			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		}
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// don't forget to enable shader before setting uniforms
@@ -657,9 +774,9 @@ int main() {
 		//Setup Advanced Lights
 		staticShader.setVec3("viewPos", camera.Position);
 		staticShader.setVec3("dirLight.direction", lightDirection);
-		staticShader.setVec3("dirLight.ambient", glm::vec3(0.12f, 0.07f, 0.05f));
-		staticShader.setVec3("dirLight.diffuse", glm::vec3(0.45f, 0.22f, 0.10f));
-		staticShader.setVec3("dirLight.specular", glm::vec3(0.15f, 0.08f, 0.04f));
+		staticShader.setVec3("dirLight.ambient", glm::vec3(0.5f, 0.5f, 0.5f));
+		staticShader.setVec3("dirLight.diffuse", glm::vec3(0.45f, 0.44f, 0.30f));
+		staticShader.setVec3("dirLight.specular", glm::vec3(0.15f, 0.8f, 0.4f));
 
 		staticShader.setVec3("pointLight[0].position", lightPosition);
 		staticShader.setVec3("pointLight[0].ambient", glm::vec3(0.0f, 0.0f, 0.0f));
@@ -699,14 +816,15 @@ int main() {
 		staticShader.setFloat("material_shininess", 32.0f);
 
 		//glm::mat4 model = glm::mat4(1.0f);
-		glm::mat4 tmp = glm::mat4(1.0f);
+		//glm::mat4 tmp = glm::mat4(1.0f);
 		// view/projection transformations
 		//glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
-		projectionOp = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
-		viewOp = camera.GetViewMatrix();
+		//projectionOp = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
+		//viewOp = camera.GetViewMatrix();
 		staticShader.setMat4("projection", projectionOp);
 		staticShader.setMat4("view", viewOp);
 
+		
 		//Setup shader for primitives
 		myShader.use();
 		// view/projection transformations
@@ -726,7 +844,7 @@ int main() {
 		// Personaje Animacion
 		// -------------------------------------------------------------------------------------------------------------------------
 		//Remember to activate the shader with the animation
-		animShader.use();
+		/*animShader.use();
 		animShader.setMat4("projection", projectionOp);
 		animShader.setMat4("view", viewOp);
 
@@ -742,7 +860,7 @@ int main() {
 		modelOp = glm::scale(modelOp, glm::vec3(0.05f));	// it's a bit too big for our scene, so scale it down
 		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		animShader.setMat4("model", modelOp);
-		animacionPersonaje.Draw(animShader);
+		animacionPersonaje.Draw(animShader);*/
 
 		// -------------------------------------------------------------------------------------------------------------------------
 		// Segundo Personaje Animacion
@@ -803,22 +921,68 @@ int main() {
 		staticShader.setMat4("projection", projectionOp);
 		staticShader.setMat4("view", viewOp);
 
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(300.0f, 0.0f, 25.0f));
+		/*modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(300.0f, 0.0f, 25.0f));
 		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		modelOp = glm::scale(modelOp, glm::vec3(5.0f));
 		staticShader.setMat4("model", modelOp);
-		Iglesia.Draw(staticShader);
+		Iglesia.Draw(staticShader);*/
 
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(90.0f, 0.0f, -60.0f));
-		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(150.0f, 0.0f, 100.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		modelOp = glm::scale(modelOp, glm::vec3(0.4f));
 		staticShader.setMat4("model", modelOp);
 		catrina.Draw(staticShader);
 
+		
+
+		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, -10.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.2f));
+		staticShader.setMat4("model", modelOp);
+		piso.Draw(staticShader);
+
+		/*modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(50.0f, -1.0f, 50.0f));
+		//modelOp = glm::scale(modelOp, glm::vec3(0.2f));
+		staticShader.setMat4("model", modelOp);
+		Pasillo.Draw(staticShader);
+
+		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(110.0f, -1.0f, 0.0f));
+		//modelOp = glm::scale(modelOp, glm::vec3(0.2f));
+		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
+		Paredes.Draw(staticShader);*/
+
+		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(-350.0f, -10.0f, 100.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(4.0f, 4.0f, 4.0f));
+		staticShader.setMat4("model", modelOp);
+		Hacienda.Draw(staticShader);
+
+		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(100.0f, -2.0f, 100.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(1.8f,1.2f,1.5f));
+		staticShader.setMat4("model", modelOp);
+		Cementerio.Draw(staticShader);
+
+		float tumbas=0;
+
+		for (int i = 0; i < 4; i++) {
+			tumbas = i * 60.5;
+			modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(tumbas, -1.0f, 10.0f));
+			modelOp = glm::scale(modelOp, glm::vec3(0.6f));
+			modelOp = glm::rotate(modelOp, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			staticShader.setMat4("model", modelOp);
+			Tumbas.Draw(staticShader);
+		}
+
+
+		
+		// -------------------------------------------------------------------------------------------------------------------------
+		// Personaje
+		// -------------------------------------------------------------------------------------------------------------------------
+		
 		glm::mat4 refCuerpoAquaman = glm::mat4(1.0f);
 
 		refCuerpoAquaman = modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(posX, posY, posZ));
 		refCuerpoAquaman = modelOp = glm::rotate(modelOp, glm::radians(giroMonito), glm::vec3(0.0f, 1.0f, 0.0f));
+		refCuerpoAquaman = modelOp = glm::scale(modelOp, glm::vec3(0.8f));
 		staticShader.setMat4("model", modelOp);
 		CuerpoAquaman.Draw(staticShader);
 
@@ -827,109 +991,44 @@ int main() {
 		CabezaAquaman.Draw(staticShader);
 
 		modelOp = glm::translate(refCuerpoAquaman, glm::vec3(-0.75f, 1.5f, 0.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(rotBrazoDer), glm::vec3(1.0f, 0.0f, 0.0f));
 		staticShader.setMat4("model", modelOp);
 		BrazoDerAquaman.Draw(staticShader);
 
 		modelOp = glm::translate(refCuerpoAquaman, glm::vec3(0.75f, 1.5f, 0.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(rotBrazoIzq), glm::vec3(1.0f, 0.0f, 0.0f));
 		staticShader.setMat4("model", modelOp);
 		BrazoIzqAquaman.Draw(staticShader);
 
-		modelOp = glm::translate(refCuerpoAquaman, glm::vec3(-0.5f, 0.0f, -0.1f));
+		//modelOp = glm::translate(refCuerpoAquaman, glm::vec3(-0.5f, 0.0f, -0.1f));
+		glm::mat4 refPiernaDer = modelOp = glm::translate(refCuerpoAquaman, glm::vec3(-0.5f, 0.0f, -0.1f));
+		refPiernaDer = modelOp = glm::rotate(modelOp, glm::radians(rotPiernaDer), glm::vec3(1.0f, 0.0f, 0.0f));
 		staticShader.setMat4("model", modelOp);
 		PiernaDerAquaman.Draw(staticShader);
 
 		modelOp = glm::translate(refCuerpoAquaman, glm::vec3(0.5f, 0.0f, -0.1f));
+		glm::mat4 refPiernaIzq = modelOp = glm::translate(refCuerpoAquaman, glm::vec3(0.5f, 0.0f, -0.1f));
+		refPiernaIzq = modelOp = glm::rotate(modelOp, glm::radians(rotPiernaIzq), glm::vec3(1.0f, 0.0f, 0.0f));
 		staticShader.setMat4("model", modelOp);
 		PiernaIzqAquaman.Draw(staticShader);
 
-		modelOp = glm::translate(refCuerpoAquaman, glm::vec3(-0.5f, -0.9f, 0.0f));
+		//modelOp = glm::translate(refCuerpoAquaman, glm::vec3(-0.5f, -0.9f, 0.0f));
+		modelOp = glm::translate(refPiernaDer, glm::vec3(0.0f, -0.9f, 0.0f));
+		//modelOp = glm::rotate(modelOp, glm::radians(rotPiernaDer), glm::vec3(1.0f, 0.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
 		staticShader.setMat4("model", modelOp);
 		BotaDerAquaman.Draw(staticShader);
 
-		modelOp = glm::translate(refCuerpoAquaman, glm::vec3(0.5f, -0.9f, 0.0f));
+		//modelOp = glm::translate(refCuerpoAquaman, glm::vec3(0.5f, -0.9f, 0.0f));
+		modelOp = glm::translate(refPiernaIzq, glm::vec3(0.0f, -0.9f, 0.0f));
+		//modelOp = glm::rotate(modelOp, glm::radians(rotPiernaIzq), glm::vec3(1.0f, 0.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
 		staticShader.setMat4("model", modelOp);
 		BotaIzqAquaman.Draw(staticShader);
+		
+		
+		
 
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, -10.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.2f));
-		staticShader.setMat4("model", modelOp);
-		piso.Draw(staticShader);
-
-		/*modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.75f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.2f));
-		staticShader.setMat4("model", modelOp);
-		//piso.Draw(staticShader);*/
-
-		
-		// -------------------------------------------------------------------------------------------------------------------------
-		// Personaje
-		// -------------------------------------------------------------------------------------------------------------------------
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		// -------------------------------------------------------------------------------------------------------------------------
-		// Just in case
-		// -------------------------------------------------------------------------------------------------------------------------
-		/*modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(posX, posY, posZ));
-		tmp = modelOp = glm::rotate(modelOp, glm::radians(giroMonito), glm::vec3(0.0f, 1.0f, 0.0));
-		staticShader.setMat4("model", modelOp);
-		torso.Draw(staticShader);
-
-		//Pierna Der
-		modelOp = glm::translate(tmp, glm::vec3(-0.5f, 0.0f, -0.1f));
-		modelOp = glm::rotate(modelOp, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0));
-		modelOp = glm::rotate(modelOp, glm::radians(-rotRodIzq), glm::vec3(1.0f, 0.0f, 0.0f));
-		staticShader.setMat4("model", modelOp);
-		piernaDer.Draw(staticShader);
-
-		//Pie Der
-		modelOp = glm::translate(modelOp, glm::vec3(0, -0.9f, -0.2f));
-		staticShader.setMat4("model", modelOp);
-		botaDer.Draw(staticShader);
-
-		//Pierna Izq
-		modelOp = glm::translate(tmp, glm::vec3(0.5f, 0.0f, -0.1f));
-		modelOp = glm::rotate(modelOp, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		staticShader.setMat4("model", modelOp);
-		piernaIzq.Draw(staticShader);
-
-		//Pie Iz
-		modelOp = glm::translate(modelOp, glm::vec3(0, -0.9f, -0.2f));
-		staticShader.setMat4("model", modelOp);
-		botaDer.Draw(staticShader);	//Izq trase
-
-		//Brazo derecho
-		modelOp = glm::translate(tmp, glm::vec3(0.0f, -1.0f, 0.0f));
-		modelOp = glm::translate(modelOp, glm::vec3(-0.75f, 2.5f, 0));
-		modelOp = glm::rotate(modelOp, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		staticShader.setMat4("model", modelOp);
-		brazoDer.Draw(staticShader);
-
-		//Brazo izquierdo
-		modelOp = glm::translate(tmp, glm::vec3(0.0f, -1.0f, 0.0f));
-		modelOp = glm::translate(modelOp, glm::vec3(0.75f, 2.5f, 0));
-		modelOp = glm::rotate(modelOp, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		staticShader.setMat4("model", modelOp);
-		brazoIzq.Draw(staticShader);
-
-		//Cabeza
-		modelOp = glm::translate(tmp, glm::vec3(0.0f, -1.0f, 0.0f));
-		modelOp = glm::rotate(modelOp, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0));
-		modelOp = glm::translate(modelOp, glm::vec3(0.0f, 2.5f, 0));
-		staticShader.setMat4("model", modelOp);
-		cabeza.Draw(staticShader);*/
 
 		//------------------------------------------------------------------------------------
 		//IMPORTANTE
@@ -1015,22 +1114,26 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 	{
 		posX += direccion.x * velocidad;
 		posZ += direccion.z * velocidad;
+		perspect = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
 		posX -= direccion.x * velocidad;
 		posZ -= direccion.z * velocidad;
+		perspect = true;
 	}
 		//posZ -= 5.0f * deltaTime;
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
 		posX -= direccion.z * velocidad;
 		posZ += direccion.x * velocidad;
+		perspect = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
 		posX += direccion.z * velocidad;
 		posZ -= direccion.x * velocidad;
+		perspect = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
 		rotRodIzq--;
@@ -1050,6 +1153,12 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 	{
 		perspect = !perspect;
 		
+	}
+
+	// Alternar la vista cenital (plano visto desde arriba) con la tecla 'V'
+	if (key == GLFW_KEY_V && action == GLFW_PRESS)
+	{
+		vistaCenital = !vistaCenital;
 	}
 
 	//Car animation
@@ -1127,3 +1236,5 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	camera.ProcessMouseScroll(yoffset);
 }
+
+
