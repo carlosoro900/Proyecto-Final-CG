@@ -74,19 +74,6 @@ const int LOOP_TIME = 1000 / FPS; // = 16 milisec // 1000 millisec == 1 sec
 double	deltaTime = 0.0f,
 lastFrame = 0.0f;
 
-// =====================================================
-// CALIBRACIÓN INDEPENDIENTE DE BRAZOS (CALACA PANDERO)
-// =====================================================
-// Brazo Derecho (Flechas Izq/Der/Arriba/Abajo + I/K)
-float brazoDerOffX = 0.0f;
-float brazoDerOffY = 0.0f;
-float brazoDerOffZ = 0.0f;
-
-// Brazo Izquierdo + Pandero (Teclas J/U/O + F/G/H)
-float brazoIzqOffX = 0.0f;
-float brazoIzqOffY = 0.0f;
-float brazoIzqOffZ = 0.0f;
-
 
 void getResolution(void);
 void myData(void);							// De la practica 4
@@ -172,15 +159,6 @@ float anguloCaminata = 0.0f;
 float velocidadCaminata = 2.0f;
 float direccionCaminata = 1.0f;
 
-// --- Calaca Pandero ---
-float	pandPosX = 18.0f,
-pandPosY = 22.0f,
-pandPosZ = 0.0f,
-pandGiroY = 0.0f,
-pandInclinaX = 0.0f,
-pandBalanceoZ = 0.0f,
-pandShake = 0.0f;
-
 
 
 //Para las animaciones
@@ -222,6 +200,9 @@ typedef struct _frame
 	float rotCabezaSi;
 	float rotCabezaNo;
 
+	float guitPosX, guitPosY, guitPosZ, guitGiroY, guitInclinaX, guitBalanceoZ;
+	float pandPosX, pandPosY, pandPosZ, pandGiroY, pandInclinaX, pandBalanceoZ, pandShake;
+
 }FRAME;
 
 FRAME KeyFrame[MAX_FRAMES];
@@ -239,6 +220,7 @@ void saveFrame(void)
 	KeyFrame[FrameIndex].anim1Z = anim1Z;
 	KeyFrame[FrameIndex].giroFantasma = giroFantasma;
 
+
 	FrameIndex++;
 }
 
@@ -249,6 +231,7 @@ void resetElements(void)
 	anim1Z = KeyFrame[0].anim1Z;
 	giroFantasma = KeyFrame[0].giroFantasma;
 
+
 }
 
 void interpolation(void)
@@ -257,6 +240,8 @@ void interpolation(void)
 	incAnim1Y = (KeyFrame[playIndex + 1].anim1Y - KeyFrame[playIndex].anim1Y) / i_max_steps;
 	incAnim1Z = (KeyFrame[playIndex + 1].anim1Z - KeyFrame[playIndex].anim1Z) / i_max_steps;
 	giroFantasmaInc = (KeyFrame[playIndex + 1].giroFantasma - KeyFrame[playIndex].giroFantasma) / i_max_steps;
+
+
 
 }
 
@@ -360,6 +345,7 @@ void animate(void)
 			rotRodIzq += rotRodIzqInc;
 			giroMonito += giroMonitoInc;
 			giroFantasma += giroFantasmaInc;
+
 
 			i_curr_steps++;
 
@@ -837,16 +823,6 @@ int main() {
 	comprobarArchivo("resources/objects/ModelosCarlos/woman/woman.obj");
 	//catrin.initShaders(animShader.ID);
 
-	comprobarArchivo("resources/objects/ModelosHanny/calacaPandero/cabeza.obj");
-	Model CaraPandero("resources/objects/ModelosHanny/calacaPandero/cabeza.obj");
-	comprobarArchivo("resources/objects/ModelosHanny/calacaPandero/cuerpo.obj");
-	Model CuerpoPandero("resources/objects/ModelosHanny/calacaPandero/cuerpo.obj");
-	Model PderPandero("resources/objects/ModelosHanny/calacaPandero/pierDer.obj");
-	Model PizqAbajoPandero("resources/objects/ModelosHanny/calacaPandero/pierIzqAbajo.obj");
-	Model PizqArribaPandero("resources/objects/ModelosHanny/calacaPandero/pierIzqArriba.obj");
-	Model BrazoDerPandero("resources/objects/ModelosHanny/calacaPandero/brazoDer.obj");
-	Model BrazoArribaPandero("resources/objects/ModelosHanny/calacaPandero/brazoIzq.obj");
-	Model Pandero("resources/objects/ModelosHanny/calacaPandero/pandero.obj");
 
 	ModelAnim animacionPersonaje("resources/objects/Personaje1/Arm.dae");
 	animacionPersonaje.initShaders(animShader.ID);
@@ -1135,61 +1111,6 @@ int main() {
 		modelOp = glm::scale(modelOp, glm::vec3(0.2f));
 		staticShader.setMat4("model", modelOp);
 		Mujer.Draw(staticShader);
-		
-		
-
-		// =====================================================
-		// CALACA 2: PANDERO 
-		// =====================================================
-		glm::mat4 refCuerpoCalacaPandero = glm::translate(
-			refPiso,
-			glm::vec3(0.0f, 10.5f, 100.0f)
-		);
-		refCuerpoCalacaPandero = glm::rotate(
-			refCuerpoCalacaPandero,
-			glm::radians(pandGiroY),
-			glm::vec3(0.0f, 1.0f, 0.0f)
-		);
-		refCuerpoCalacaPandero = glm::rotate(
-			refCuerpoCalacaPandero,
-			glm::radians(pandInclinaX),
-			glm::vec3(1.0f, 0.0f, 0.0f)
-		);
-		refCuerpoCalacaPandero = glm::rotate(
-			refCuerpoCalacaPandero,
-			glm::radians(pandBalanceoZ),
-			glm::vec3(0.0f, 0.0f, 1.0f)
-		);
-		refCuerpoCalacaPandero = glm::scale(
-			refCuerpoCalacaPandero,
-			glm::vec3(8.0f)
-		);
-
-		// Cuerpo, cabeza y piernas unidos
-		staticShader.setMat4("model", refCuerpoCalacaPandero);
-		CuerpoPandero.Draw(staticShader);
-		CaraPandero.Draw(staticShader);
-		PderPandero.Draw(staticShader);
-		PizqArribaPandero.Draw(staticShader);
-		PizqAbajoPandero.Draw(staticShader);
-
-		// Brazo Derecho
-		glm::mat4 refBrazoDer = glm::translate(
-			refCuerpoCalacaPandero,
-			glm::vec3(brazoDerOffX, brazoDerOffY + pandShake, brazoDerOffZ)
-		);
-		staticShader.setMat4("model", refBrazoDer);
-		BrazoDerPandero.Draw(staticShader);
-
-		// Brazo Izquierdo + Pandero 
-		glm::mat4 refBrazoIzq = glm::translate(
-			refCuerpoCalacaPandero,
-			glm::vec3(brazoIzqOffX, brazoIzqOffY + pandShake, brazoIzqOffZ)
-		);
-		staticShader.setMat4("model", refBrazoIzq);
-		BrazoArribaPandero.Draw(staticShader);
-		Pandero.Draw(staticShader);
-
 
 
 
