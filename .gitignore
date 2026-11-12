@@ -14,6 +14,7 @@ ofrenda1.obj
 exHacienda1.obj
 exHacienda2.obj
 #exHacienda3.obj
+cuerpo.obj
 *.pdb
 *.ilk
 *.log
