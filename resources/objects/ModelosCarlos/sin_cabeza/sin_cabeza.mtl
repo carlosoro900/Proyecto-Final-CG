@@ -1,0 +1,434 @@
+# 3ds Max Wavefront OBJ Exporter v0.99 - (c)2007 guruware
+# File Created: 02.11.2026 01:24:40
+
+newmtl cyb_raincoat_d
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.4000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd cyb_raincoat_d_baseColor.png
+	norm cyb_raincoat_d_normal.png
+
+newmtl Gloves_BM2
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0078
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Gloves_BM2_baseColor.png
+	norm Gloves_BM2_normal.png
+
+newmtl Gloves_BM
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0078
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Gloves_BM_baseColor.png
+	norm Gloves_BM2_normal.png
+
+newmtl arms_d
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0176
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd arms_d_baseColor.png
+	norm arms_d_normal.png
+
+newmtl security_guard_gears_c
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0312
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd security_guard_gears_c_baseColor.png
+	norm security_guard_gears_c_normal.png
+
+newmtl HeadLight_d
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0312
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd HeadLight_d_baseColor.png
+	norm HeadLight_d_normal.png
+
+newmtl Jacket_D2
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0039
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Jacket_D2_baseColor.png
+	norm Jacket_D2_normal.png
+
+newmtl shirt_d4
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0156
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd shirt_d4_baseColor.png
+	norm shirt_d4_normal.png
+
+newmtl tie_d3
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0117
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd tie_d3_baseColor.png
+	norm tie_d3_normal.png
+
+newmtl Jacket_D
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0039
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Jacket_D_baseColor.png
+	norm Jacket_D2_normal.png
+
+newmtl shirt_d2
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0156
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd shirt_d2_baseColor.png
+	norm shirt_d4_normal.png
+
+newmtl Jacket_closed
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0039
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Jacket_closed_baseColor.png
+	norm Jacket_closed_normal.png
+
+newmtl tie_d2rker
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0117
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd tie_d2rker_baseColor.png
+	norm tie_d3_normal.png
+
+newmtl Jacket_closed_shoulders
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0039
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Jacket_closed_shoulders_baseColor.png
+	norm Jacket_closed_normal.png
+
+newmtl shirt_d3
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0156
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd shirt_d3_baseColor.png
+	norm shirt_d4_normal.png
+
+newmtl Vest_d2
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.5000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Vest_d2_baseColor.png
+	norm Vest_d2_normal.png
+
+newmtl tie_d
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0117
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd tie_d_baseColor.png
+	norm tie_d3_normal.png
+
+newmtl pants_d2
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0020
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd pants_d2_baseColor.png
+	norm pants_d2_normal.png
+
+newmtl pants_d
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0020
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd pants_d_baseColor.png
+	norm pants_d_normal.png
+
+newmtl shirt2_d2
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0117
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd shirt2_d2_baseColor.png
+	norm shirt2_d2_normal.png
+
+newmtl tie_d2
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0117
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd tie_d2_baseColor.png
+	norm tie_d3_normal.png
+
+newmtl shirt2_d3
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0117
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd shirt2_d3_baseColor.png
+	norm shirt2_d2_normal.png
+
+newmtl shirt2_d4
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0117
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd shirt2_d4_baseColor.png
+	norm shirt2_d2_normal.png
+
+newmtl Vest_d
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.5000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Vest_d_baseColor.png
+	norm Vest_d2_normal.png
+
+newmtl Shoes_d3
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0312
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Shoes_d3_baseColor.png
+	norm Shoes_d3_normal.png
+
+newmtl Shoes_d3_2
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0312
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Shoes_d3_2_baseColor.png
+	norm Shoes_d3_normal.png
+
+newmtl shoes_d
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.3000
+	d 0.7000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.0312
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd shoes_d_baseColor.png
+	norm shoes_d_normal.png

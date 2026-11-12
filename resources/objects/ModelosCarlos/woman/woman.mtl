@@ -1,0 +1,133 @@
+# 3ds Max Wavefront OBJ Exporter v0.99 - (c)2007 guruware
+# File Created: 01.11.2026 21:24:34
+
+newmtl Wolf3D_Eye
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.4000
+	d 0.6000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Wolf3D_Eye_baseColor.jpeg
+
+newmtl Wolf3D_Skin
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.4000
+	d 0.6000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.7000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Wolf3D_Skin_baseColor.jpeg
+
+newmtl Wolf3D_Teeth
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.4000
+	d 0.6000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Wolf3D_Teeth_baseColor.jpeg
+
+newmtl Wolf3D_Body
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.4000
+	d 0.6000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.7000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Wolf3D_Body_baseColor.jpeg
+	norm Wolf3D_Body_normal.jpeg
+
+newmtl Wolf3D_Outfit_Bottom
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.4000
+	d 0.6000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 1.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Wolf3D_Outfit_Bottom_baseColor.jpeg
+	map_Pr Wolf3D_Outfit_Bottom_metallicRoughness_G.png
+	map_Pm Wolf3D_Outfit_Bottom_metallicRoughness_B.png
+	norm Wolf3D_Outfit_Bottom_normal.jpeg
+
+newmtl Wolf3D_Outfit_Footwear
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.4000
+	d 0.6000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 1.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Wolf3D_Outfit_Footwear_baseColor.jpeg
+	map_Pr Wolf3D_Outfit_Footwear_metallicRoughness_G.png
+	map_Pm Wolf3D_Outfit_Footwear_metallicRoughness_B.png
+	norm Wolf3D_Outfit_Footwear_normal.jpeg
+
+newmtl Wolf3D_Outfit_Top
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.4000
+	d 0.6000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 1.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Wolf3D_Outfit_Top_baseColor.jpeg
+	map_Pr Wolf3D_Outfit_Top_metallicRoughness_G.png
+	map_Pm Wolf3D_Outfit_Top_metallicRoughness_B.png
+	norm Wolf3D_Outfit_Top_normal.jpeg
+
+newmtl Wolf3D_Hair
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.4000
+	d 0.6000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.7000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Wolf3D_Hair_baseColor.jpeg
+	norm Wolf3D_Hair_normal.jpeg

@@ -56,6 +56,8 @@ float cameraPitch = 10.0f;
 
 float mouseSensitivity = 0.4f;
 
+bool person = false;
+
 float MovementSpeed = 0.1f;
 GLfloat lastX = SCR_WIDTH / 2.0f,
 		lastY = SCR_HEIGHT / 2.0f;
@@ -71,6 +73,20 @@ const int FPS = 60;
 const int LOOP_TIME = 1000 / FPS; // = 16 milisec // 1000 millisec == 1 sec
 double	deltaTime = 0.0f,
 lastFrame = 0.0f;
+
+// =====================================================
+// CALIBRACIÓN INDEPENDIENTE DE BRAZOS (CALACA PANDERO)
+// =====================================================
+// Brazo Derecho (Flechas Izq/Der/Arriba/Abajo + I/K)
+float brazoDerOffX = 0.0f;
+float brazoDerOffY = 0.0f;
+float brazoDerOffZ = 0.0f;
+
+// Brazo Izquierdo + Pandero (Teclas J/U/O + F/G/H)
+float brazoIzqOffX = 0.0f;
+float brazoIzqOffY = 0.0f;
+float brazoIzqOffZ = 0.0f;
+
 
 void getResolution(void);
 void myData(void);							// De la practica 4
@@ -128,9 +144,15 @@ recorrido4 = false;
 
 
 //Keyframes (Manipulación y dibujo)
-float	posX = -200.0f,
+float	posX = 0.0f,
 		posY = 2.0f,
-		posZ = 100.0f,
+		posZ = 0.0f,
+		anim1X = 122.0f,
+		anim1Y = -20.0f,
+		anim1Z = -170.0f,
+		anim2X = 20.0f,
+		anim2Z = 300.0f,
+		anim3Y = 0.0f,
 		rotRodIzq = 0.0f,
 		giroMonito = 180.0f,
 		rotBrazoDer = 0.0f,
@@ -138,7 +160,10 @@ float	posX = -200.0f,
 		rotPiernaDer = 0.0f,
 		rotPiernaIzq = 0.0f,
 		rotCabezaSi = 0.0f,
-		rotCabezaNo = 0.0f;
+		rotCabezaNo = 0.0f,
+		giroFantasma = 0.0f,
+		giroFantasma2 = 0.0f,
+		giroFantasma3 = 0.0f;
 
 float tiempoCaminata = 0.0f;
 //float velocidadCaminata = 0.02f;
@@ -147,9 +172,25 @@ float anguloCaminata = 0.0f;
 float velocidadCaminata = 2.0f;
 float direccionCaminata = 1.0f;
 
+// --- Calaca Pandero ---
+float	pandPosX = 18.0f,
+pandPosY = 22.0f,
+pandPosZ = 0.0f,
+pandGiroY = 0.0f,
+pandInclinaX = 0.0f,
+pandBalanceoZ = 0.0f,
+pandShake = 0.0f;
+
+
+
+//Para las animaciones
+
 float	incX = 0.0f,
 		incY = 0.0f,
 		incZ = 0.0f,
+		incAnim1X = 0.0f,
+		incAnim1Y = 0.0f,
+		incAnim1Z = 0.0f,
 		rotRodIzqInc = 0.0f,
 		giroMonitoInc = 0.0f,
 		rotBrazoDerInc= 0.0f,
@@ -157,21 +198,23 @@ float	incX = 0.0f,
 		rotPiernaDerInc = 0.0f,
 		rotPiernaIzqInc = 0.0f,
 		rotCabezaSiInc = 0.0f,
-		rotCabezaNoInc = 0.0f;
+		rotCabezaNoInc = 0.0f,
+		giroFantasmaInc = 0.0f;
 
 bool perspect = false;
 
-#define MAX_FRAMES 9
+#define MAX_FRAMES 18
 int i_max_steps = 60;
 int i_curr_steps = 0;
 typedef struct _frame
 {
 	//Variables para GUARDAR Key Frames
-	float posX;		//Variable para PosicionX
-	float posY;		//Variable para PosicionY
-	float posZ;		//Variable para PosicionZ
+	float anim1X;		//Variable para PosicionX
+	float anim1Y;		//Variable para PosicionY
+	float anim1Z;		//Variable para PosicionZ
 	float rotRodIzq;
 	float giroMonito;
+	float giroFantasma;
 	float rotBrazoDer;
 	float rotBrazoIzq;
 	float rotPiernaDer;
@@ -182,7 +225,7 @@ typedef struct _frame
 }FRAME;
 
 FRAME KeyFrame[MAX_FRAMES];
-int FrameIndex = 0;			//introducir número en caso de tener Key guardados
+int FrameIndex = 16;			//introducir número en caso de tener Key guardados
 bool play = false;
 int playIndex = 0;
 
@@ -191,34 +234,29 @@ void saveFrame(void)
 	//printf("frameindex %d\n", FrameIndex);
 	std::cout << "Frame Index = " << FrameIndex << std::endl;
 
-	KeyFrame[FrameIndex].posX = posX;
-	KeyFrame[FrameIndex].posY = posY;
-	KeyFrame[FrameIndex].posZ = posZ;
-
-	KeyFrame[FrameIndex].rotRodIzq = rotRodIzq;
-	KeyFrame[FrameIndex].giroMonito = giroMonito;
+	KeyFrame[FrameIndex].anim1X = anim1X;
+	KeyFrame[FrameIndex].anim1Y = anim1Y;
+	KeyFrame[FrameIndex].anim1Z = anim1Z;
+	KeyFrame[FrameIndex].giroFantasma = giroFantasma;
 
 	FrameIndex++;
 }
 
 void resetElements(void)
 {
-	posX = KeyFrame[0].posX;
-	posY = KeyFrame[0].posY;
-	posZ = KeyFrame[0].posZ;
+	anim1X = KeyFrame[0].anim1X;
+	anim1Y = KeyFrame[0].anim1Y;
+	anim1Z = KeyFrame[0].anim1Z;
+	giroFantasma = KeyFrame[0].giroFantasma;
 
-	rotRodIzq = KeyFrame[0].rotRodIzq;
-	giroMonito = KeyFrame[0].giroMonito;
 }
 
 void interpolation(void)
 {
-	incX = (KeyFrame[playIndex + 1].posX - KeyFrame[playIndex].posX) / i_max_steps;
-	incY = (KeyFrame[playIndex + 1].posY - KeyFrame[playIndex].posY) / i_max_steps;
-	incZ = (KeyFrame[playIndex + 1].posZ - KeyFrame[playIndex].posZ) / i_max_steps;
-
-	rotRodIzqInc = (KeyFrame[playIndex + 1].rotRodIzq - KeyFrame[playIndex].rotRodIzq) / i_max_steps;
-	giroMonitoInc = (KeyFrame[playIndex + 1].giroMonito - KeyFrame[playIndex].giroMonito) / i_max_steps;
+	incAnim1X = (KeyFrame[playIndex + 1].anim1X - KeyFrame[playIndex].anim1X) / i_max_steps;
+	incAnim1Y = (KeyFrame[playIndex + 1].anim1Y - KeyFrame[playIndex].anim1Y) / i_max_steps;
+	incAnim1Z = (KeyFrame[playIndex + 1].anim1Z - KeyFrame[playIndex].anim1Z) / i_max_steps;
+	giroFantasmaInc = (KeyFrame[playIndex + 1].giroFantasma - KeyFrame[playIndex].giroFantasma) / i_max_steps;
 
 }
 
@@ -315,12 +353,13 @@ void animate(void)
 		else
 		{
 			//Draw animation
-			posX += incX;
-			posY += incY;
-			posZ += incZ;
+			anim1X += incAnim1X;
+			anim1Y += incAnim1Y;
+			anim1Z += incAnim1Z;
 
 			rotRodIzq += rotRodIzqInc;
 			giroMonito += giroMonitoInc;
+			giroFantasma += giroFantasmaInc;
 
 			i_curr_steps++;
 
@@ -332,12 +371,8 @@ void animate(void)
 
 	
 
-	if (perspect == true) {
-		//float i, 
-		//	g = 0;
-		//bool permiso_giro = true;
+	if (person == true) {
 		
-
 		// Convertir el giro del personaje a radianes
 		float angle = glm::radians(giroMonito);
 
@@ -357,62 +392,50 @@ void animate(void)
 
 		// Orientar la cámara hacia el objetivo
 		camera.Front = glm::normalize(target - camera.Position);
+
+
+		// Mantener la cámara siempre vertical
+		glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
+
+		camera.Right = glm::normalize(
+			glm::cross(camera.Front, worldUp)
+		);
+
+		camera.Up = glm::normalize(
+			glm::cross(camera.Right, camera.Front)
+		);
+
 
 		// ANIMACIÓN DE CAMINAR
-
-		// Actualizar ángulo
-		anguloCaminata += direccionCaminata * velocidadCaminata * deltaTime;
-
-		// Limitar el movimiento entre -60 y 60
-		if (anguloCaminata >= 60.0f) {
-			anguloCaminata = 60.0f;
-			direccionCaminata = -1.0f;
-		}
-		else if (anguloCaminata <= -60.0f) {
-			anguloCaminata = -60.0f;
-			direccionCaminata = 1.0f;
-		}
-
-		// Alternar brazos
-		rotBrazoDer = anguloCaminata;
-		rotBrazoIzq = -anguloCaminata;
-
-		// Alternar piernas
-		rotPiernaDer = -anguloCaminata;
-		rotPiernaIzq = anguloCaminata;
-
-		perspect = false;
-	}
-	else {
-
-		/*int i,
-			g = 0;
-		bool permiso_giro = true;*/
-
 		
+		if (perspect) {
+			// Actualizar ángulo
+			anguloCaminata += direccionCaminata * velocidadCaminata * deltaTime;
 
-		// Convertir el giro del personaje a radianes
-		float angle = glm::radians(giroMonito);
+			// Limitar el movimiento entre -60 y 60
+			if (anguloCaminata >= 60.0f) {
+				anguloCaminata = 60.0f;
+				direccionCaminata = -1.0f;
+			}
+			else if (anguloCaminata <= -60.0f) {
+				anguloCaminata = -60.0f;
+				direccionCaminata = 1.0f;
+			}
 
-		// Calcular la posición detrás del personaje
-		camera.Position.x = posX - sin(angle) * cameraDistance;
-		camera.Position.z = posZ - cos(angle) * cameraDistance;
+			// Alternar brazos
+			rotBrazoDer = anguloCaminata;
+			rotBrazoIzq = -anguloCaminata;
 
-		// Aplicar altura de la cámara
-		camera.Position.y = posY + cameraHeight;
+			// Alternar piernas
+			rotPiernaDer = -anguloCaminata;
+			rotPiernaIzq = anguloCaminata;
 
-		// Calcular hacia dónde mira la cámara
-		glm::vec3 target(
-			posX,
-			posY + cameraPitch * 0.1f,
-			posZ
-		);
-
-		// Orientar la cámara hacia el objetivo
-		camera.Front = glm::normalize(target - camera.Position);
-
-
+			perspect = false;
+		}
+		
 	}
+	
+
 	//Vehículo
 	if (animacion)
 	{
@@ -586,6 +609,106 @@ bool comprobarArchivo(const std::string& ruta)
 	return true;
 }
 
+void animations() {
+
+	static int paso = 0;
+	float velocidad = 0.9f;
+
+	/*float velocidad2 = 3.0f;
+	static int paso2 = 0;
+
+	switch (paso2) {
+
+		// 1. SALTO
+	case 0:
+		anim3Y += velocidad2;
+		if (anim3Y >= 10.0f) paso++;
+		break;
+
+		// 2. CAÍDA
+	case 1:
+		anim3Y -= velocidad2;
+		if (anim3Y <= 0.0f) {
+			anim3Y = 0.0f;
+			paso2++;
+		}
+		break;
+
+		// 3. GIRO SOBRE SU PROPIO EJE
+	case 2:
+		giroFantasma3 += 2.0f;
+		if (giroFantasma3 >= 360.0f) {
+			giroFantasma3 = 360.0f;
+			paso2++;
+		}
+		break;
+
+		// 4. QUIETO
+	case 3:
+
+		for (int x = 0; x <= 20; x++) {
+			anim3Y = 0.0f;
+		}
+		paso2 = 0;
+		break;
+	}*/
+
+	switch (paso) {
+	case 0:
+		giroFantasma2 = 90;
+		anim2Z -= velocidad;
+		if (anim2Z <= 150) paso++;
+		break;
+
+	case 1:
+		giroFantasma2 = 0;
+		anim2X += velocidad;
+		if (anim2X >= 190) paso++;
+		break;
+
+	case 2:
+		velocidad = 2.5;
+		giroFantasma2 = 90;
+		anim2Z -= velocidad;
+		if (anim2Z <= -300) paso++;
+		break;
+
+	case 3:
+		velocidad = 2.5;
+		giroFantasma2 = 180;
+		anim2X -= velocidad;
+		if (anim2X <= -190) paso++;
+		break;
+
+	case 4:
+		velocidad = 2.5;
+		giroFantasma2 = 270;
+		anim2Z += velocidad;
+		if (anim2Z >= 150) paso++;
+		break;
+
+	case 5:
+		velocidad = 0.9;
+		giroFantasma2 = 0;
+		anim2X += velocidad;
+		if (anim2X >= -30) paso++;
+		break;
+
+	case 6:
+		giroFantasma2 = -90;
+		anim2Z += velocidad;
+		if (anim2Z >= 300) paso++;
+		break;
+
+	case 7:
+		giroFantasma2 = 0;
+		anim2X += velocidad;
+		if (anim2X >= 20) paso = 0;
+		break;
+	}
+
+}
+
 int main() {
 	// Inicializar GLFW
 	if (!glfwInit())
@@ -684,6 +807,8 @@ int main() {
 
 	Model piso("resources/objects/ModelosGustavo/Piso3.obj");
 	comprobarArchivo("resources/objects/ModelosGustavo/Piso3.obj");
+	Model cesped("resources/objects/ModelosGustavo/cesped/cesped.obj");
+	comprobarArchivo("resources/objects/ModelosGustavo/cesped/cesped.obj");
 
 	Model CabezaAquaman("resources/objects/Aquaman/Cabeza.obj");
 	Model CuerpoAquaman("resources/objects/Aquaman/Cuerpo.obj");
@@ -704,7 +829,24 @@ int main() {
 	comprobarArchivo("resources/objects/ModelosCarlos/pasillo_cementerio/cementerio.obj");
 	Model Tumbas("resources/objects/ModelosCarlos/cementerio/cementerio.obj");
 	comprobarArchivo("resources/objects/ModelosCarlos/cementerio/cementerio.obj");
+	Model Fantasma("resources/objects/ModelosCarlos/mujer_fantasma/mujer_fantasma.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/mujer_fantasma/mujer_fantasma.obj");
+	Model SinCabeza("resources/objects/ModelosCarlos/sin_cabeza/sin_cabeza.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/sin_cabeza/sin_cabeza.obj");
+	Model Mujer("resources/objects/ModelosCarlos/woman/woman.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/woman/woman.obj");
 	//catrin.initShaders(animShader.ID);
+
+	comprobarArchivo("resources/objects/ModelosHanny/calacaPandero/cabeza.obj");
+	Model CaraPandero("resources/objects/ModelosHanny/calacaPandero/cabeza.obj");
+	comprobarArchivo("resources/objects/ModelosHanny/calacaPandero/cuerpo.obj");
+	Model CuerpoPandero("resources/objects/ModelosHanny/calacaPandero/cuerpo.obj");
+	Model PderPandero("resources/objects/ModelosHanny/calacaPandero/pierDer.obj");
+	Model PizqAbajoPandero("resources/objects/ModelosHanny/calacaPandero/pierIzqAbajo.obj");
+	Model PizqArribaPandero("resources/objects/ModelosHanny/calacaPandero/pierIzqArriba.obj");
+	Model BrazoDerPandero("resources/objects/ModelosHanny/calacaPandero/brazoDer.obj");
+	Model BrazoArribaPandero("resources/objects/ModelosHanny/calacaPandero/brazoIzq.obj");
+	Model Pandero("resources/objects/ModelosHanny/calacaPandero/pandero.obj");
 
 	ModelAnim animacionPersonaje("resources/objects/Personaje1/Arm.dae");
 	animacionPersonaje.initShaders(animShader.ID);
@@ -714,13 +856,79 @@ int main() {
 	//Inicialización de KeyFrames
 	for (int i = 0; i < MAX_FRAMES; i++)
 	{
-		KeyFrame[i].posX = 0;
-		KeyFrame[i].posY = 0;
-		KeyFrame[i].posZ = 0;
-		KeyFrame[i].rotRodIzq = 0;
-		KeyFrame[i].giroMonito = 0;
+		KeyFrame[i].anim1X = 0;
+		KeyFrame[i].anim1Y = 0;
+		KeyFrame[i].anim1Z = 0;
+
 	}
 
+	KeyFrame[0].anim1X = 122.0f;
+	KeyFrame[0].anim1Y = -15.0f;
+	KeyFrame[0].anim1Z = -170.0f;
+
+	KeyFrame[1].anim1X = 122.0f;
+	KeyFrame[1].anim1Y = -10.0f;
+	KeyFrame[1].anim1Z = -170.0f;
+
+	KeyFrame[2].anim1X = 122.0f;
+	KeyFrame[2].anim1Y = -5.0f;
+	KeyFrame[2].anim1Z = -170.0f;
+
+	KeyFrame[3].anim1X = 122.0f;
+	KeyFrame[3].anim1Y = 0.0f;
+	KeyFrame[3].anim1Z = -130.0f;
+
+	KeyFrame[4].anim1X = 122.0f;
+	KeyFrame[4].anim1Y = 0.0f;
+	KeyFrame[4].anim1Z = -90.0f;
+
+	//KeyFrame[5].giroFantasma = -90.0f;
+	KeyFrame[5].anim1X = 80.0f;
+	KeyFrame[5].anim1Y = 0.0f;
+	KeyFrame[5].anim1Z = -90.0f;
+
+	//KeyFrame[6].giroFantasma = -90.0f;
+	KeyFrame[6].anim1X = 40.0f;
+	KeyFrame[6].anim1Y = 0.0f;
+	KeyFrame[6].anim1Z = -90.0f;
+
+	//KeyFrame[7].giroFantasma = -90.0f;
+	KeyFrame[7].anim1X = -4.0f;
+	KeyFrame[7].anim1Y = 0.0f;
+	KeyFrame[7].anim1Z = -90.0f;
+
+	//KeyFrame[8].giroFantasma = 0.0f;
+	KeyFrame[8].anim1X = -4.0f;
+	KeyFrame[8].anim1Y = 0.0f;
+	KeyFrame[8].anim1Z = -40.0f;
+
+	KeyFrame[9].anim1X = -4.0f;
+	KeyFrame[9].anim1Y = 0.0f;
+	KeyFrame[9].anim1Z = 10.0f;
+
+	KeyFrame[10].anim1X = -4.0f;
+	KeyFrame[10].anim1Y = 0.0f;
+	KeyFrame[10].anim1Z = 60.0f;
+
+	KeyFrame[11].anim1X = -4.0f;
+	KeyFrame[11].anim1Y = 0.0f;
+	KeyFrame[11].anim1Z = 110.0f;
+
+	KeyFrame[12].anim1X = -4.0f;
+	KeyFrame[12].anim1Y = 0.0f;
+	KeyFrame[12].anim1Z = 150.0f;
+
+	KeyFrame[13].anim1X = -4.0f;
+	KeyFrame[13].anim1Y = 0.0f;
+	KeyFrame[13].anim1Z = 190.0f;
+
+	KeyFrame[14].anim1X = -4.0f;
+	KeyFrame[14].anim1Y = 0.0f;
+	KeyFrame[14].anim1Z = 230.0f;
+
+	KeyFrame[15].anim1X = 122.0f;
+	KeyFrame[15].anim1Y = -20.0f;
+	KeyFrame[15].anim1Z = -170.0f;
 
 	// create transformations and Projection
 	glm::mat4 modelOp = glm::mat4(1.0f);		// initialize Matrix, Use this matrix for individual models
@@ -741,6 +949,7 @@ int main() {
 		// -----
 		//my_input(window);
 		animate();
+		animations();
 
 		// render
 		// ------
@@ -752,7 +961,13 @@ int main() {
 		if (vistaCenital)
 		{
 			moverCamaraCenital(window);
-			float aspecto = (float)SCR_WIDTH / (float)SCR_HEIGHT;
+
+			// El aspecto se toma del tamaño real del framebuffer para que el mapa no se deforme
+			int anchoFB = 0, altoFB = 0;
+			glfwGetFramebufferSize(window, &anchoFB, &altoFB);
+			if (altoFB == 0) altoFB = 1;
+			float aspecto = (float)anchoFB / (float)altoFB;
+
 			posCamara = glm::vec3(centroCenital.x, 500.0f, centroCenital.y);
 			// up = -Z: el norte (-Z) queda hacia arriba en pantalla y +X hacia la derecha
 			viewOp = glm::lookAt(posCamara, glm::vec3(centroCenital.x, 0.0f, centroCenital.y), glm::vec3(0.0f, 0.0f, -1.0f));
@@ -815,12 +1030,6 @@ int main() {
 
 		staticShader.setFloat("material_shininess", 32.0f);
 
-		//glm::mat4 model = glm::mat4(1.0f);
-		//glm::mat4 tmp = glm::mat4(1.0f);
-		// view/projection transformations
-		//glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
-		//projectionOp = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
-		//viewOp = camera.GetViewMatrix();
 		staticShader.setMat4("projection", projectionOp);
 		staticShader.setMat4("view", viewOp);
 
@@ -840,76 +1049,13 @@ int main() {
 		skyboxShader.use();
 		skybox.Draw(skyboxShader, viewOp, projectionOp, camera);
 
-		// -------------------------------------------------------------------------------------------------------------------------
-		// Personaje Animacion
-		// -------------------------------------------------------------------------------------------------------------------------
-		//Remember to activate the shader with the animation
-		/*animShader.use();
-		animShader.setMat4("projection", projectionOp);
-		animShader.setMat4("view", viewOp);
-
-		animShader.setVec3("material.specular", glm::vec3(0.5f));
-		animShader.setFloat("material.shininess", 32.0f);
-		animShader.setVec3("light.ambient", ambientColor);
-		animShader.setVec3("light.diffuse", diffuseColor);
-		animShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-		animShader.setVec3("light.direction", lightDirection);
-		animShader.setVec3("viewPos", camera.Position);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(-40.3f, 1.75f, 0.3f)); // translate it down so it's at the center of the scene
-		modelOp = glm::scale(modelOp, glm::vec3(0.05f));	// it's a bit too big for our scene, so scale it down
-		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		animShader.setMat4("model", modelOp);
-		animacionPersonaje.Draw(animShader);*/
-
-		// -------------------------------------------------------------------------------------------------------------------------
-		// Segundo Personaje Animacion
-		// -------------------------------------------------------------------------------------------------------------------------
-
-		/*modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(80.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		modelOp = glm::scale(modelOp, glm::vec3(0.15f));	// it's a bit too big for our scene, so scale it down
-		//modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		animShader.setMat4("model", modelOp);
-		AmyBailando.Draw(animShader);*/
-
 
 		// -------------------------------------------------------------------------------------------------------------------------
 		// Escenario Primitivas
 		// -------------------------------------------------------------------------------------------------------------------------
 		myShader.use();
 
-		//Tener Piso como referencia
-		glBindVertexArray(VAO[2]);
-		//Colocar código aquí
-		modelOp = glm::scale(glm::mat4(1.0f), glm::vec3(40.0f, 2.0f, 40.0f));
-		modelOp = glm::translate(modelOp, glm::vec3(0.0f, -1.0f, 0.0f));
-		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		myShader.setMat4("model", modelOp);
-		myShader.setVec3("aColor", 1.0f, 1.0f, 1.0f);
-		glBindTexture(GL_TEXTURE_2D, t_ladrillos);
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		glBindVertexArray(VAO[0]);
-		//Colocar código aquí
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 10.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(5.0f, 5.0f, 1.0f));
-		myShader.setMat4("model", modelOp);
-		myShader.setVec3("aColor", 1.0f, 1.0f, 1.0f);
-		glBindTexture(GL_TEXTURE_2D, t_unam);
-		//glDrawArrays(GL_TRIANGLES, 0, 36); //A lonely cube :(
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		/***   Segundo objeto  **/
-		/*
-		glBindVertexArray(VAO[1]);
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 0.0f, 0.0f));
-		myShader.setMat4("model", modelOp);
-		myShader.setVec3("aColor", 1.0f, 1.0f, 1.0f);
-		glBindTexture(GL_TEXTURE_2D, t_unam);
-		glDrawArrays(GL_TRIANGLES, 0, 36); //A lonely cube :(
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		*/
-		glBindVertexArray(0);
+		//glBindVertexArray(0);
 		// ------------------------------------------------------------------------------------------------------------------------
 		// Termina Escenario Primitivas
 		// -------------------------------------------------------------------------------------------------------------------------
@@ -921,59 +1067,133 @@ int main() {
 		staticShader.setMat4("projection", projectionOp);
 		staticShader.setMat4("view", viewOp);
 
-		/*modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(300.0f, 0.0f, 25.0f));
-		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(5.0f));
-		staticShader.setMat4("model", modelOp);
-		Iglesia.Draw(staticShader);*/
+		glm::mat4 refPiso = glm::mat4(1.0f);
+		glm::mat4 refCementerio = glm::mat4(1.0f);
+		glm::mat4 refHacienda = glm::mat4(1.0f);
 
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(150.0f, 0.0f, 100.0f));
-		modelOp = glm::rotate(modelOp, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.4f));
-		staticShader.setMat4("model", modelOp);
-		catrina.Draw(staticShader);
-
-		
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, -10.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.2f));
+		refPiso = modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, -10.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.25f,0.2f, 0.35f));
 		staticShader.setMat4("model", modelOp);
 		piso.Draw(staticShader);
 
-		/*modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(50.0f, -1.0f, 50.0f));
-		//modelOp = glm::scale(modelOp, glm::vec3(0.2f));
-		staticShader.setMat4("model", modelOp);
-		Pasillo.Draw(staticShader);
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(110.0f, -1.0f, 0.0f));
-		//modelOp = glm::scale(modelOp, glm::vec3(0.2f));
-		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		staticShader.setMat4("model", modelOp);
-		Paredes.Draw(staticShader);*/
-
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(-350.0f, -10.0f, 100.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(4.0f, 4.0f, 4.0f));
+		refHacienda = modelOp = glm::translate(refPiso, glm::vec3(0.0f, -10.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(4.0f, 3.4f, 4.0f));
 		staticShader.setMat4("model", modelOp);
 		Hacienda.Draw(staticShader);
 
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(100.0f, -2.0f, 100.0f));
+		modelOp = glm::translate(refHacienda, glm::vec3(150.0f, 10.5f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(6.0f, 2.0f, 3.0f));
+		staticShader.setMat4("model", modelOp);
+		cesped.Draw(staticShader);
+
+		refCementerio = modelOp = glm::translate(refPiso, glm::vec3(0.0f, -2.0f, -500.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		modelOp = glm::scale(modelOp, glm::vec3(1.8f,1.2f,1.5f));
 		staticShader.setMat4("model", modelOp);
 		Cementerio.Draw(staticShader);
 
-		float tumbas=0;
+		modelOp = glm::translate(refCementerio, glm::vec3(0.0f, 0.0f, -40.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.4f));
+		staticShader.setMat4("model", modelOp);
+		catrina.Draw(staticShader);
+
+
+		//glEnable(GL_BLEND); // Activa la mezcla de colores para permitir que los objetos puedan tener transparencia.
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		// Establece cómo se combinará el color del objeto con el fondo, utilizando el canal alfa para controlar la transparencia.
+		modelOp = glm::translate(refCementerio, glm::vec3(anim1X, anim1Y, anim1Z));
+		modelOp = glm::rotate(modelOp, glm::radians(giroFantasma), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.3f));
+		staticShader.setMat4("model", modelOp);
+		Fantasma.Draw(staticShader);
+		//glDisable(GL_BLEND);
+		// Desactiva la mezcla de colores para evitar que los siguientes objetos dibujados hereden el efecto de transparencia.
+
+
+		float tumbas=-120;
 
 		for (int i = 0; i < 4; i++) {
-			tumbas = i * 60.5;
-			modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(tumbas, -1.0f, 10.0f));
-			modelOp = glm::scale(modelOp, glm::vec3(0.6f));
+			tumbas += 60.5;
+			modelOp = glm::translate(refCementerio, glm::vec3(tumbas, -1.0f, -170.0f));
+			modelOp = glm::scale(modelOp, glm::vec3(0.55f));
 			modelOp = glm::rotate(modelOp, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 			staticShader.setMat4("model", modelOp);
 			Tumbas.Draw(staticShader);
 		}
 
+		//Hombre sin cabeza
+		modelOp = glm::translate(refCementerio, glm::vec3(anim2X, 1.0f, anim2Z));
+		modelOp = glm::rotate(modelOp, glm::radians(giroFantasma2), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.3f));
+		staticShader.setMat4("model", modelOp);
+		SinCabeza.Draw(staticShader);
 
+		//Mujer
+		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(5.0f, anim3Y, 5.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(giroFantasma3), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.2f));
+		staticShader.setMat4("model", modelOp);
+		Mujer.Draw(staticShader);
 		
+		
+
+		// =====================================================
+		// CALACA 2: PANDERO 
+		// =====================================================
+		glm::mat4 refCuerpoCalacaPandero = glm::translate(
+			refPiso,
+			glm::vec3(0.0f, 10.5f, 100.0f)
+		);
+		refCuerpoCalacaPandero = glm::rotate(
+			refCuerpoCalacaPandero,
+			glm::radians(pandGiroY),
+			glm::vec3(0.0f, 1.0f, 0.0f)
+		);
+		refCuerpoCalacaPandero = glm::rotate(
+			refCuerpoCalacaPandero,
+			glm::radians(pandInclinaX),
+			glm::vec3(1.0f, 0.0f, 0.0f)
+		);
+		refCuerpoCalacaPandero = glm::rotate(
+			refCuerpoCalacaPandero,
+			glm::radians(pandBalanceoZ),
+			glm::vec3(0.0f, 0.0f, 1.0f)
+		);
+		refCuerpoCalacaPandero = glm::scale(
+			refCuerpoCalacaPandero,
+			glm::vec3(8.0f)
+		);
+
+		// Cuerpo, cabeza y piernas unidos
+		staticShader.setMat4("model", refCuerpoCalacaPandero);
+		CuerpoPandero.Draw(staticShader);
+		CaraPandero.Draw(staticShader);
+		PderPandero.Draw(staticShader);
+		PizqArribaPandero.Draw(staticShader);
+		PizqAbajoPandero.Draw(staticShader);
+
+		// Brazo Derecho
+		glm::mat4 refBrazoDer = glm::translate(
+			refCuerpoCalacaPandero,
+			glm::vec3(brazoDerOffX, brazoDerOffY + pandShake, brazoDerOffZ)
+		);
+		staticShader.setMat4("model", refBrazoDer);
+		BrazoDerPandero.Draw(staticShader);
+
+		// Brazo Izquierdo + Pandero 
+		glm::mat4 refBrazoIzq = glm::translate(
+			refCuerpoCalacaPandero,
+			glm::vec3(brazoIzqOffX, brazoIzqOffY + pandShake, brazoIzqOffZ)
+		);
+		staticShader.setMat4("model", refBrazoIzq);
+		BrazoArribaPandero.Draw(staticShader);
+		Pandero.Draw(staticShader);
+
+
+
+
+
 		// -------------------------------------------------------------------------------------------------------------------------
 		// Personaje
 		// -------------------------------------------------------------------------------------------------------------------------
@@ -1027,7 +1247,39 @@ int main() {
 		BotaIzqAquaman.Draw(staticShader);
 		
 		
-		
+		// -------------------------------------------------------------------------------------------------------------------------
+		// Marcador del personaje (solo en la vista cenital)
+		// Cuadro rojo = posición del personaje, cuadro amarillo = hacia dónde mira.
+		// Su tamaño es proporcional al zoom para que se vea igual de grande en pantalla.
+		// -------------------------------------------------------------------------------------------------------------------------
+		if (vistaCenital)
+		{
+			myShader.use();
+			glBindVertexArray(VAO[0]);
+			glBindTexture(GL_TEXTURE_2D, t_white);
+
+			float tam = zoomCenital * 0.03f;
+
+			glm::mat4 refMarcador = glm::translate(glm::mat4(1.0f), glm::vec3(posX, 400.0f, posZ));
+			refMarcador = glm::rotate(refMarcador, glm::radians(giroMonito), glm::vec3(0.0f, 1.0f, 0.0f));
+
+			// Cuerpo (acostado sobre el plano XZ)
+			modelOp = glm::rotate(refMarcador, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			modelOp = glm::scale(modelOp, glm::vec3(tam, tam, 1.0f));
+			myShader.setMat4("model", modelOp);
+			myShader.setVec3("aColor", 1.0f, 0.0f, 0.0f);
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+			// Punta hacia el frente del personaje (+Z local)
+			modelOp = glm::translate(refMarcador, glm::vec3(0.0f, 1.0f, tam * 0.9f));
+			modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			modelOp = glm::scale(modelOp, glm::vec3(tam * 0.5f, tam * 0.5f, 1.0f));
+			myShader.setMat4("model", modelOp);
+			myShader.setVec3("aColor", 1.0f, 1.0f, 0.0f);
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+			glBindVertexArray(0);
+		}
 
 
 		//------------------------------------------------------------------------------------
@@ -1098,51 +1350,48 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
-	/*if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && person==false)
 		camera.ProcessKeyboard(FORWARD, (float)deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && person == false)
 		camera.ProcessKeyboard(BACKWARD, (float)deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && person == false)
 		camera.ProcessKeyboard(LEFT, (float)deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && person == false)
 		camera.ProcessKeyboard(RIGHT, (float)deltaTime);
-	*/
+	
 	
 
 	//To Configure Model
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && person == true)
 	{
 		posX += direccion.x * velocidad;
 		posZ += direccion.z * velocidad;
 		perspect = true;
 	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && person == true)
 	{
 		posX -= direccion.x * velocidad;
 		posZ -= direccion.z * velocidad;
 		perspect = true;
 	}
 		//posZ -= 5.0f * deltaTime;
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && person == true)
 	{
 		posX -= direccion.z * velocidad;
 		posZ += direccion.x * velocidad;
 		perspect = true;
 	}
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && person == true)
 	{
 		posX += direccion.z * velocidad;
 		posZ -= direccion.x * velocidad;
 		perspect = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-		rotRodIzq--;
-	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
-		rotRodIzq++;
-	/*if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
-		giroMonito--;
-	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
-		giroMonito++;*/
+		person = false;
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+		person = true;
+
 	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
 		lightPosition.x++;
 	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
@@ -1220,16 +1469,23 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	lastX = xpos;
 	lastY = ypos;
 
-	//camera.ProcessMouseMovement(xoffset, yoffset);
+	
 
-	//giroMonito += (float)xoffset * 0.1;
-	giroMonito -= (float)xoffset * mouseSensitivity;
+	if (person) {
+		//giroMonito += (float)xoffset * 0.1;
+		giroMonito -= (float)xoffset * mouseSensitivity;
 
-	// El movimiento vertical inclina solamente la cámara
-	cameraPitch += yoffset * mouseSensitivity*3;
+		// El movimiento vertical inclina solamente la cámara
+		cameraPitch += yoffset * mouseSensitivity * 3;
 
-	// Limitar la inclinación para evitar que la cámara dé vueltas
-	cameraPitch = glm::clamp(cameraPitch, -10.0f, 120.0f);
+		// Limitar la inclinación para evitar que la cámara dé vueltas
+		cameraPitch = glm::clamp(cameraPitch, -10.0f, 120.0f);
+	}
+	else {
+		camera.ProcessMouseMovement(xoffset, yoffset);
+	}
+
+	
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called

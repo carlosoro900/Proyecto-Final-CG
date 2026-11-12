@@ -12,5 +12,5 @@ newmtl 03___Default
 	Kd 0.5880 0.5880 0.5880
 	Ks 0.0000 0.0000 0.0000
 	Ke 0.0000 0.0000 0.0000
-	map_Ka terrenodelimitado.jpeg
-	map_Kd terrenodelimitado.jpeg
+	map_Ka piso_piedra.png
+	map_Kd piso_piedra.png
