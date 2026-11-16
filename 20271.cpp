@@ -2,7 +2,7 @@
 /* ----------------   Proyecto Final  --------------------------*/
 
 /*-----Alumnos:     Orozco Eleuterio José Carlos  , Gustavo  ,  Hanny              ---------------*/
-/*----No. Cuenta:    316050717   ,         ,                      ---------------*/
+/*----No. Cuenta:    316050717   ,   317124204   ,                      ---------------*/
 
 #include <Windows.h>
 
@@ -27,10 +27,8 @@
 #include <iostream>
 #include <mmsystem.h>
 #include <fstream>
-//#include <iostream>
 #include <string>
-
-
+#include <vector>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -38,6 +36,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void my_input(GLFWwindow* window, int key, int scancode, int action, int mods);
 void animate(void);
 void moverCamaraCenital(GLFWwindow* window);
+void dibujarBarrasCinematicas(Shader& shader2D);
 
 // settings
 unsigned int SCR_WIDTH = 800;
@@ -60,7 +59,7 @@ bool person = false;
 
 float MovementSpeed = 0.1f;
 GLfloat lastX = SCR_WIDTH / 2.0f,
-		lastY = SCR_HEIGHT / 2.0f;
+lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
 // Vista cenital (plano visto desde arriba)
@@ -68,17 +67,28 @@ bool vistaCenital = false;					// Se activa/desactiva con la tecla V
 float zoomCenital = 200.0f;					// Mitad de la altura visible, en unidades del mundo
 glm::vec2 centroCenital(200.0f, -10.0f);	// Punto (X, Z) del escenario que mira la vista cenital
 
-//Timing
-const int FPS = 60;
-const int LOOP_TIME = 1000 / FPS; // = 16 milisec // 1000 millisec == 1 sec
-double	deltaTime = 0.0f,
-lastFrame = 0.0f;
+// Barras negras cinemáticas (letterbox) al presionar 1, 2 o 3
+bool modoCinematico = false;
+float alturaBarraCinematica = 0.0f;			// 0.0f = ocultas, 0.13f = franjas cinemáticas activas
 
+// =====================================================
+// CALIBRACIÓN INDEPENDIENTE DE BRAZOS (CALACA PANDERO)
+// =====================================================
+// Brazo Derecho (Flechas Izq/Der/Arriba/Abajo + I/K)
+float brazoDerOffX = 0.0f;
+float brazoDerOffY = 0.0f;
+float brazoDerOffZ = 0.0f;
 
-bool verEscen=false, verModel=false, verAnim=false;
+// Brazo Izquierdo + Pandero (Teclas J/U/O + F/G/H)
+float brazoIzqOffX = 0.0f;
+float brazoIzqOffY = 0.0f;
+float brazoIzqOffZ = 0.0f;
+
 
 void getResolution(void);
 void myData(void);							// De la practica 4
+void LoadTextures(void);					// De la práctica 6
+unsigned int generateTextures(char*, bool, bool);	// De la práctica 6
 
 
 //For Keyboard
@@ -87,6 +97,12 @@ movY = 0.0f,
 movZ = -5.0f,
 rotX = 0.0f;
 
+//Texture
+unsigned int	t_smile,
+t_toalla,
+t_unam,
+t_white,
+t_ladrillos;
 
 //Lighting
 glm::vec3 lightPosition(0.0f, 4.0f, -10.0f);
@@ -108,7 +124,6 @@ glm::vec3 colores[] = {
 int contador = 0;
 int colorActual = 0;
 
-
 //// Light
 glm::vec3 lightColor = glm::vec3(0.7f);
 glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
@@ -125,37 +140,33 @@ recorrido3 = false,
 recorrido4 = false;
 
 
-// =====================================================
-// CALIBRACIÓN INDEPENDIENTE DE BRAZOS (CALACA PANDERO)
-// =====================================================
-// Brazo Derecho (Flechas Izq/Der/Arriba/Abajo + I/K)
-float brazoDerOffX = 0.0f;
-float brazoDerOffY = 0.0f;
-float brazoDerOffZ = 0.0f;
+//Keyframes (Manipulación y dibujo)
+float	posX = 0.0f,
+posY = 2.0f,
+posZ = 0.0f,
+anim1X = 122.0f,
+anim1Y = -20.0f,
+anim1Z = -170.0f,
+anim2X = 20.0f,
+anim2Z = 300.0f,
+anim3Y = 0.0f,
+rotRodIzq = 0.0f,
+giroMonito = 180.0f,
+rotBrazoDer = 0.0f,
+rotBrazoIzq = 0.0f,
+rotPiernaDer = 0.0f,
+rotPiernaIzq = 0.0f,
+rotCabezaSi = 0.0f,
+rotCabezaNo = 0.0f,
+giroFantasma = 0.0f,
+giroFantasma2 = 0.0f,
+giroFantasma3 = 0.0f;
 
-// Brazo Izquierdo + Pandero (Teclas J/U/O + F/G/H)
-float brazoIzqOffX = 0.0f;
-float brazoIzqOffY = 0.0f;
-float brazoIzqOffZ = 0.0f;
-
-// =====================================================
-// KEYFRAMES: VARIABLES DE DIBUJO E INCREMENTO
-// =====================================================
-
-// --- Calaca Guitarra ---
-float	guitPosX = -18.0f,
-guitPosY = 22.0f,
-guitPosZ = 0.0f,
-guitGiroY = 0.0f,
-guitInclinaX = 0.0f,
-guitBalanceoZ = 0.0f;
-
-float	guitPosXInc = 0.0f,
-guitPosYInc = 0.0f,
-guitPosZInc = 0.0f,
-guitGiroYInc = 0.0f,
-guitInclinaXInc = 0.0f,
-guitBalanceoZInc = 0.0f;
+float tiempoCaminata = 0.0f;
+float anguloMaximo = 80.0f;
+float anguloCaminata = 0.0f;
+float velocidadCaminata = 120.0f;
+float direccionCaminata = 1.0f;
 
 // --- Calaca Pandero ---
 float	pandPosX = 18.0f,
@@ -166,62 +177,24 @@ pandInclinaX = 0.0f,
 pandBalanceoZ = 0.0f,
 pandShake = 0.0f;
 
-float	pandPosXInc = 0.0f,
-pandPosYInc = 0.0f,
-pandPosZInc = 0.0f,
-pandGiroYInc = 0.0f,
-pandInclinaXInc = 0.0f,
-pandBalanceoZInc = 0.0f,
-pandShakeInc = 0.0f;
-
-//Keyframes (Manipulación y dibujo)
-float	posX = 0.0f,
-		posY = 2.0f,
-		posZ = 0.0f,
-		anim1X = 122.0f,
-		anim1Y = -20.0f,
-		anim1Z = -170.0f,
-		anim2X = 20.0f,
-		anim2Z = 300.0f,
-		anim3Y = 0.0f,
-		rotRodIzq = 0.0f,
-		giroMonito = 180.0f,
-		rotBrazoDer = 0.0f,
-		rotBrazoIzq = 0.0f,
-		rotPiernaDer = 0.0f,
-		rotPiernaIzq = 0.0f,
-		rotCabezaSi = 0.0f,
-		rotCabezaNo = 0.0f,
-		giroFantasma = 0.0f,
-		giroFantasma2 = 0.0f,
-		giroFantasma3 = 0.0f;
-
-float tiempoCaminata = 0.0f;
-//float velocidadCaminata = 0.02f;
-float anguloMaximo = 80.0f;
-float anguloCaminata = 0.0f;
-float velocidadCaminata = 2.0f;
-float direccionCaminata = 1.0f;
-
 
 
 //Para las animaciones
-
 float	incX = 0.0f,
-		incY = 0.0f,
-		incZ = 0.0f,
-		incAnim1X = 0.0f,
-		incAnim1Y = 0.0f,
-		incAnim1Z = 0.0f,
-		rotRodIzqInc = 0.0f,
-		giroMonitoInc = 0.0f,
-		rotBrazoDerInc= 0.0f,
-		rotBrazoIzqInc = 0.0f,
-		rotPiernaDerInc = 0.0f,
-		rotPiernaIzqInc = 0.0f,
-		rotCabezaSiInc = 0.0f,
-		rotCabezaNoInc = 0.0f,
-		giroFantasmaInc = 0.0f;
+incY = 0.0f,
+incZ = 0.0f,
+incAnim1X = 0.0f,
+incAnim1Y = 0.0f,
+incAnim1Z = 0.0f,
+rotRodIzqInc = 0.0f,
+giroMonitoInc = 0.0f,
+rotBrazoDerInc = 0.0f,
+rotBrazoIzqInc = 0.0f,
+rotPiernaDerInc = 0.0f,
+rotPiernaIzqInc = 0.0f,
+rotCabezaSiInc = 0.0f,
+rotCabezaNoInc = 0.0f,
+giroFantasmaInc = 0.0f;
 
 bool perspect = false;
 
@@ -256,30 +229,12 @@ int playIndex = 0;
 
 void saveFrame(void)
 {
-	//printf("frameindex %d\n", FrameIndex);
 	std::cout << "Frame Index = " << FrameIndex << std::endl;
 
 	KeyFrame[FrameIndex].anim1X = anim1X;
 	KeyFrame[FrameIndex].anim1Y = anim1Y;
 	KeyFrame[FrameIndex].anim1Z = anim1Z;
 	KeyFrame[FrameIndex].giroFantasma = giroFantasma;
-
-
-	//Para calacas
-	KeyFrame[FrameIndex].guitPosX = guitPosX;
-	KeyFrame[FrameIndex].guitPosY = guitPosY;
-	KeyFrame[FrameIndex].guitPosZ = guitPosZ;
-	KeyFrame[FrameIndex].guitGiroY = guitGiroY;
-	KeyFrame[FrameIndex].guitInclinaX = guitInclinaX;
-	KeyFrame[FrameIndex].guitBalanceoZ = guitBalanceoZ;
-
-	KeyFrame[FrameIndex].pandPosX = pandPosX;
-	KeyFrame[FrameIndex].pandPosY = pandPosY;
-	KeyFrame[FrameIndex].pandPosZ = pandPosZ;
-	KeyFrame[FrameIndex].pandGiroY = pandGiroY;
-	KeyFrame[FrameIndex].pandInclinaX = pandInclinaX;
-	KeyFrame[FrameIndex].pandBalanceoZ = pandBalanceoZ;
-	KeyFrame[FrameIndex].pandShake = pandShake;
 
 	FrameIndex++;
 }
@@ -291,21 +246,6 @@ void resetElements(void)
 	anim1Z = KeyFrame[0].anim1Z;
 	giroFantasma = KeyFrame[0].giroFantasma;
 
-	guitPosX = KeyFrame[0].guitPosX;
-	guitPosY = KeyFrame[0].guitPosY;
-	guitPosZ = KeyFrame[0].guitPosZ;
-	guitGiroY = KeyFrame[0].guitGiroY;
-	guitInclinaX = KeyFrame[0].guitInclinaX;
-	guitBalanceoZ = KeyFrame[0].guitBalanceoZ;
-
-	pandPosX = KeyFrame[0].pandPosX;
-	pandPosY = KeyFrame[0].pandPosY;
-	pandPosZ = KeyFrame[0].pandPosZ;
-	pandGiroY = KeyFrame[0].pandGiroY;
-	pandInclinaX = KeyFrame[0].pandInclinaX;
-	pandBalanceoZ = KeyFrame[0].pandBalanceoZ;
-	pandShake = KeyFrame[0].pandShake;
-
 }
 
 void interpolation(void)
@@ -314,21 +254,6 @@ void interpolation(void)
 	incAnim1Y = (KeyFrame[playIndex + 1].anim1Y - KeyFrame[playIndex].anim1Y) / i_max_steps;
 	incAnim1Z = (KeyFrame[playIndex + 1].anim1Z - KeyFrame[playIndex].anim1Z) / i_max_steps;
 	giroFantasmaInc = (KeyFrame[playIndex + 1].giroFantasma - KeyFrame[playIndex].giroFantasma) / i_max_steps;
-
-	guitPosXInc = (KeyFrame[playIndex + 1].guitPosX - KeyFrame[playIndex].guitPosX) / i_max_steps;
-	guitPosYInc = (KeyFrame[playIndex + 1].guitPosY - KeyFrame[playIndex].guitPosY) / i_max_steps;
-	guitPosZInc = (KeyFrame[playIndex + 1].guitPosZ - KeyFrame[playIndex].guitPosZ) / i_max_steps;
-	guitGiroYInc = (KeyFrame[playIndex + 1].guitGiroY - KeyFrame[playIndex].guitGiroY) / i_max_steps;
-	guitInclinaXInc = (KeyFrame[playIndex + 1].guitInclinaX - KeyFrame[playIndex].guitInclinaX) / i_max_steps;
-	guitBalanceoZInc = (KeyFrame[playIndex + 1].guitBalanceoZ - KeyFrame[playIndex].guitBalanceoZ) / i_max_steps;
-
-	pandPosXInc = (KeyFrame[playIndex + 1].pandPosX - KeyFrame[playIndex].pandPosX) / i_max_steps;
-	pandPosYInc = (KeyFrame[playIndex + 1].pandPosY - KeyFrame[playIndex].pandPosY) / i_max_steps;
-	pandPosZInc = (KeyFrame[playIndex + 1].pandPosZ - KeyFrame[playIndex].pandPosZ) / i_max_steps;
-	pandGiroYInc = (KeyFrame[playIndex + 1].pandGiroY - KeyFrame[playIndex].pandGiroY) / i_max_steps;
-	pandInclinaXInc = (KeyFrame[playIndex + 1].pandInclinaX - KeyFrame[playIndex].pandInclinaX) / i_max_steps;
-	pandBalanceoZInc = (KeyFrame[playIndex + 1].pandBalanceoZ - KeyFrame[playIndex].pandBalanceoZ) / i_max_steps;
-	pandShakeInc = (KeyFrame[playIndex + 1].pandShake - KeyFrame[playIndex].pandShake) / i_max_steps;
 
 }
 
@@ -340,42 +265,47 @@ unsigned int generateTextures(const char* filename, bool alfa, bool isPrimitive)
 	// set the texture wrapping parameters
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// Mipmaps para evitar ruido visual y mejorar rendimiento en perspectiva
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// load image, create texture and generate mipmaps
-	int width, height, nrChannels;
-	
-	if(isPrimitive)
-		stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-	else
-		stbi_set_flip_vertically_on_load(false); // tell stb_image.h to flip loaded texture's on the y-axis.
 
+	int width, height, nrChannels;
+	if (isPrimitive)
+		stbi_set_flip_vertically_on_load(true);
+	else
+		stbi_set_flip_vertically_on_load(false);
 
 	unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 0);
 	if (data)
 	{
-		if (alfa)
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		else
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		GLenum formato = (nrChannels == 4) ? GL_RGBA : GL_RGB;
+		glTexImage2D(GL_TEXTURE_2D, 0, formato, width, height, 0, formato, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
+		stbi_image_free(data);
 		return textureID;
 	}
 	else
 	{
-		std::cout << "Failed to load texture" << std::endl;
+		std::cout << "Failed to load texture: " << filename << std::endl;
 		return 100;
 	}
+}
 
-	stbi_image_free(data);
+void LoadTextures()
+{
+
+	t_smile = generateTextures("Texturas/awesomeface.png", 1, true);
+	t_toalla = generateTextures("Texturas/toalla.tga", 0, true);
+	t_unam = generateTextures("Texturas/escudo_unam.jpg", 0, true);
+	t_ladrillos = generateTextures("Texturas/bricks.jpg", 0, true);
+	//This must be the last
+	t_white = generateTextures("Texturas/white.jpg", 0, false);
 }
 
 
 
 void animate(void) 
 {
-
 	lightPosition01.x = 200.0f * cos(myTime);
 	lightPosition01.z = 200.0f * sin(myTime);
 	myTime += 0.005f;
@@ -400,14 +330,12 @@ void animate(void)
 			if (playIndex > FrameIndex - 2)	//end of total animation?
 			{
 				std::cout << "Animation ended" << std::endl;
-				//printf("termina anim\n");
 				playIndex = 0;
 				play = false;
 			}
 			else //Next frame interpolations
 			{
 				i_curr_steps = 0; //Reset counter
-				//Interpolation
 				interpolation();
 			}
 		}
@@ -422,13 +350,7 @@ void animate(void)
 			giroMonito += giroMonitoInc;
 			giroFantasma += giroFantasmaInc;
 
-
-			guitPosX += guitPosXInc;
-			guitPosY += guitPosYInc;
-			guitPosZ += guitPosZInc;
-			guitGiroY += guitGiroYInc;
-			guitInclinaX += guitInclinaXInc;
-			guitBalanceoZ += guitBalanceoZInc;
+			i_curr_steps++;
 
 			pandPosX += pandPosXInc;
 			pandPosY += pandPosYInc;
@@ -438,19 +360,11 @@ void animate(void)
 			pandBalanceoZ += pandBalanceoZInc;
 			pandShake += pandShakeInc;
 
-
 			i_curr_steps++;
-
-			//camera.Position = glm::vec3(posX - 3, posY + 3, posZ - 3);
-			
 		}
-		
 	}
 
-	
-
 	if (person == true) {
-		
 		// Convertir el giro del personaje a radianes
 		float angle = glm::radians(giroMonito);
 
@@ -471,7 +385,6 @@ void animate(void)
 		// Orientar la cámara hacia el objetivo
 		camera.Front = glm::normalize(target - camera.Position);
 
-
 		// Mantener la cámara siempre vertical
 		glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
 
@@ -483,14 +396,10 @@ void animate(void)
 			glm::cross(camera.Right, camera.Front)
 		);
 
-
 		// ANIMACIÓN DE CAMINAR
-		
 		if (perspect) {
-			// Actualizar ángulo
-			anguloCaminata += direccionCaminata * velocidadCaminata * deltaTime;
+			anguloCaminata += direccionCaminata * velocidadCaminata * (float)deltaTime;
 
-			// Limitar el movimiento entre -60 y 60
 			if (anguloCaminata >= 60.0f) {
 				anguloCaminata = 60.0f;
 				direccionCaminata = -1.0f;
@@ -510,17 +419,13 @@ void animate(void)
 
 			perspect = false;
 		}
-		
 	}
-	
 
 	//Vehículo
 	if (animacion)
 	{
 		movAuto_x += 3.0f;
 	}
-
-
 }
 
 // Movimiento de la cámara en la vista cenital (se llama una vez por frame)
@@ -536,6 +441,45 @@ void moverCamaraCenital(GLFWwindow* window)
 		centroCenital.x += paso;		// derecha en pantalla = +X
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		centroCenital.x -= paso;
+}
+
+// Dibuja las franjas negras cinemáticas (superior e inferior) en pantalla 2D
+void dibujarBarrasCinematicas(Shader& shader2D)
+{
+	float objetivo = modoCinematico ? 0.13f : 0.0f;
+	alturaBarraCinematica += (objetivo - alturaBarraCinematica) * 0.15f;
+
+	if (alturaBarraCinematica <= 0.001f)
+	{
+		alturaBarraCinematica = 0.0f;
+		return;
+	}
+
+	glDisable(GL_DEPTH_TEST);
+
+	shader2D.use();
+	shader2D.setMat4("projection", glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f));
+	shader2D.setMat4("view", glm::mat4(1.0f));
+	shader2D.setVec3("aColor", 0.0f, 0.0f, 0.0f);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, t_white);
+	glBindVertexArray(VAO[0]);
+
+	// Franja negra inferior
+	glm::mat4 barraInf = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, alturaBarraCinematica * 0.5f, 0.0f));
+	barraInf = glm::scale(barraInf, glm::vec3(1.0f, alturaBarraCinematica, 1.0f));
+	shader2D.setMat4("model", barraInf);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	// Franja negra superior
+	glm::mat4 barraSup = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 1.0f - (alturaBarraCinematica * 0.5f), 0.0f));
+	barraSup = glm::scale(barraSup, glm::vec3(1.0f, alturaBarraCinematica, 1.0f));
+	shader2D.setMat4("model", barraSup);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	glBindVertexArray(0);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void getResolution() {
@@ -558,11 +502,11 @@ void myData() {
 	};
 
 	float verticesPiso[] = {
-		// positions          // texture coords
-		 10.5f,  10.5f, 0.0f,   4.0f, 4.0f, // top right
-		 10.5f, -10.5f, 0.0f,   4.0f, 0.0f, // bottom right
-		-10.5f, -10.5f, 0.0f,   0.0f, 0.0f, // bottom left
-		-10.5f,  10.5f, 0.0f,   0.0f, 4.0f  // top left 
+		// positions          // texture coords (80x80 repeticiones para cubrir el escenario completo)
+		 10.5f,  10.5f, 0.0f,   80.0f, 80.0f, // top right
+		 10.5f, -10.5f, 0.0f,   80.0f,  0.0f, // bottom right
+		-10.5f, -10.5f, 0.0f,    0.0f,  0.0f, // bottom left
+		-10.5f,  10.5f, 0.0f,    0.0f, 80.0f  // top left 
 	};
 	unsigned int indicesPiso[] = {
 		0, 1, 3, // first triangle
@@ -647,14 +591,10 @@ void myData() {
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-
 	//PARA CUBO
 	glBindVertexArray(VAO[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCubo), verticesCubo, GL_STATIC_DRAW);
-
-	/*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
 
 	// position attribute
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
@@ -692,6 +632,44 @@ void animations() {
 	static int paso = 0;
 	float velocidad = 0.9f;
 
+	/*float velocidad2 = 3.0f;
+	static int paso2 = 0;
+
+	switch (paso2) {
+
+		// 1. SALTO
+	case 0:
+		anim3Y += velocidad2;
+		if (anim3Y >= 10.0f) paso++;
+		break;
+
+		// 2. CAÍDA
+	case 1:
+		anim3Y -= velocidad2;
+		if (anim3Y <= 0.0f) {
+			anim3Y = 0.0f;
+			paso2++;
+		}
+		break;
+
+		// 3. GIRO SOBRE SU PROPIO EJE
+	case 2:
+		giroFantasma3 += 2.0f;
+		if (giroFantasma3 >= 360.0f) {
+			giroFantasma3 = 360.0f;
+			paso2++;
+		}
+		break;
+
+		// 4. QUIETO
+	case 3:
+
+		for (int x = 0; x <= 20; x++) {
+			anim3Y = 0.0f;
+		}
+		paso2 = 0;
+		break;
+	}*/
 
 	switch (paso) {
 	case 0:
@@ -707,28 +685,28 @@ void animations() {
 		break;
 
 	case 2:
-		velocidad = 2.5;
+		velocidad = 2.5f;
 		giroFantasma2 = 90;
 		anim2Z -= velocidad;
 		if (anim2Z <= -300) paso++;
 		break;
 
 	case 3:
-		velocidad = 2.5;
+		velocidad = 2.5f;
 		giroFantasma2 = 180;
 		anim2X -= velocidad;
 		if (anim2X <= -190) paso++;
 		break;
 
 	case 4:
-		velocidad = 2.5;
+		velocidad = 2.5f;
 		giroFantasma2 = 270;
 		anim2Z += velocidad;
 		if (anim2Z >= 150) paso++;
 		break;
 
 	case 5:
-		velocidad = 0.9;
+		velocidad = 0.9f;
 		giroFantasma2 = 0;
 		anim2X += velocidad;
 		if (anim2X >= -30) paso++;
@@ -746,59 +724,8 @@ void animations() {
 		if (anim2X >= 20) paso = 0;
 		break;
 	}
-
 }
 
-
-void visuales() {
-
-	// VISTA GENERAL DEL ESCENARIO
-	if (verEscen) {
-
-		glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
-
-		camera.Position = glm::vec3(250.0f, 700.0f, 1200.0f);
-
-		camera.Front = glm::normalize(
-			glm::vec3(250.0f, 0.0f, 350.0f) - camera.Position
-		);
-
-		camera.Up = worldUp;
-
-		verEscen = false;
-	}
-
-	// VISTA DE LA ANIMACIÓN
-	if (verAnim) {
-
-		glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
-
-		camera.Position = glm::vec3(0.0f, 24.0f, 80.0f);
-
-		camera.Front = glm::normalize(
-			glm::vec3(0.0f, 24.0f, 0.0f) - camera.Position
-		);
-
-		camera.Up = worldUp;
-
-		verAnim = false;
-	}
-
-	// VISTA DEL MODELO
-	if (verModel) {
-
-		glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
-
-		camera.Position = glm::vec3(240.0f, 8.3f, -480.0f);
-
-		camera.Front = glm::normalize(
-			glm::vec3(240.0f, 8.3f, -580.0f) - camera.Position
-		);
-
-		camera.Up = worldUp;
-
-		verModel = false;
-	}
 }
 
 int main() {
@@ -833,6 +760,7 @@ int main() {
 	}
 
 	glfwMakeContextCurrent(window);
+	glfwSwapInterval(0); // Evita bloqueo extra de V-Sync en laptop
 
 	// Registrar callbacks
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -851,9 +779,6 @@ int main() {
 		return -1;
 	}
 
-	// Capturar el mouse
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
 	std::cout << "Ancho: " << SCR_WIDTH << std::endl;
 	std::cout << "Alto: " << SCR_HEIGHT << std::endl;
 
@@ -861,11 +786,9 @@ int main() {
 	// -----------------------------
 	//Mis funciones
 	//Datos a utilizar
-	//LoadTextures();
+	LoadTextures();
 	myData();
 	glEnable(GL_DEPTH_TEST);
-
-	
 
 	// build and compile shaders
 	// -------------------------
@@ -873,17 +796,16 @@ int main() {
 	Shader staticShader("Shaders/shader_Lights.vs", "Shaders/shader_Lights_mod.fs");	//To use with static models
 	Shader skyboxShader("Shaders/skybox.vs", "Shaders/skybox.fs");	//To use with skybox
 	Shader animShader("Shaders/anim.vs", "Shaders/anim.fs");	//To use with animated models 
-	
-	
-	vector<std::string> faces{
-		"resources/skybox/right.jpg",
-		"resources/skybox/left.jpg",
-		"resources/skybox/top.jpg",
-		"resources/skybox/bottom.jpg",
-		"resources/skybox/front.jpg",
-		"resources/skybox/back.jpg"
-	};
 
+	// Skybox de galaxia en el orden estricto de OpenGL (+X, -X, +Y, -Y, +Z, -Z)
+	vector<std::string> faces{
+		"resources/skybox/galaxy+X.tga", // 0: Right  (+X)
+		"resources/skybox/galaxy-X.tga", // 1: Left   (-X)
+		"resources/skybox/galaxy+Y.tga", // 2: Top    (+Y)
+		"resources/skybox/galaxy-Y.tga", // 3: Bottom (-Y)
+		"resources/skybox/galaxy+Z.tga", // 4: Front  (+Z)
+		"resources/skybox/galaxy-Z.tga"  // 5: Back   (-Z)
+	};
 
 	Skybox skybox = Skybox(faces);
 
@@ -894,32 +816,9 @@ int main() {
 
 	// load models
 	// -----------
-
-
-
-	Model piso("resources/objects/ModelosGustavo/Piso3.obj");
-	comprobarArchivo("resources/objects/ModelosGustavo/Piso3.obj");
+	// Se omite Piso3.obj porque ahora usamos el plano texturizado VAO[2]
 	Model cesped("resources/objects/ModelosGustavo/cesped/cesped.obj");
 	comprobarArchivo("resources/objects/ModelosGustavo/cesped/cesped.obj");
-
-	Model CaraGuitarra("resources/objects/ModelosHanny/calacaGuitarra/cabeza.obj");
-	comprobarArchivo("resources/objects/ModelosHanny/calacaGuitarra/cabeza.obj");
-	Model CuerpoGuitarra("resources/objects/ModelosHanny/calacaGuitarra/cuerpo.obj");
-	comprobarArchivo("resources/objects/ModelosHanny/calacaGuitarra/cuerpo.obj");
-	Model PderGuitarra("resources/objects/ModelosHanny/calacaGuitarra/piernaDer.obj");
-	Model PizqGuitarra("resources/objects/ModelosHanny/calacaGuitarra/piernaIzq.obj");
-
-
-	Model CaraPandero("resources/objects/ModelosHanny/calacaPandero/cabeza.obj");
-	comprobarArchivo("resources/objects/ModelosHanny/calacaPandero/cabeza.obj");
-	Model CuerpoPandero("resources/objects/ModelosHanny/calacaPandero/cuerpo.obj");
-	Model PderPandero("resources/objects/ModelosHanny/calacaPandero/pierDer.obj");
-	Model PizqAbajoPandero("resources/objects/ModelosHanny/calacaPandero/pierIzqAbajo.obj");
-	Model PizqArribaPandero("resources/objects/ModelosHanny/calacaPandero/pierIzqArriba.obj");
-	Model BrazoDerPandero("resources/objects/ModelosHanny/calacaPandero/brazoDer.obj");
-	Model BrazoArribaPandero("resources/objects/ModelosHanny/calacaPandero/brazoIzq.obj");
-	Model Pandero("resources/objects/ModelosHanny/calacaPandero/pandero.obj");
-
 
 	Model CabezaAquaman("resources/objects/Aquaman/Cabeza.obj");
 	Model CuerpoAquaman("resources/objects/Aquaman/Cuerpo.obj");
@@ -946,13 +845,22 @@ int main() {
 	comprobarArchivo("resources/objects/ModelosCarlos/sin_cabeza/sin_cabeza.obj");
 	Model Mujer("resources/objects/ModelosCarlos/woman/woman.obj");
 	comprobarArchivo("resources/objects/ModelosCarlos/woman/woman.obj");
-	//catrin.initShaders(animShader.ID);
+	Model nuevoArbol("resources/objects/ModelosGustavo/nuevoArbol/nuevoArbol.obj");
+	comprobarArchivo("resources/objects/ModelosGustavo/nuevoArbol/nuevoArbol.obj");
 
+	comprobarArchivo("resources/objects/ModelosHanny/calacaPandero/cabeza.obj");
+	Model CaraPandero("resources/objects/ModelosHanny/calacaPandero/cabeza.obj");
+	comprobarArchivo("resources/objects/ModelosHanny/calacaPandero/cuerpo.obj");
+	Model CuerpoPandero("resources/objects/ModelosHanny/calacaPandero/cuerpo.obj");
+	Model PderPandero("resources/objects/ModelosHanny/calacaPandero/pierDer.obj");
+	Model PizqAbajoPandero("resources/objects/ModelosHanny/calacaPandero/pierIzqAbajo.obj");
+	Model PizqArribaPandero("resources/objects/ModelosHanny/calacaPandero/pierIzqArriba.obj");
+	Model BrazoDerPandero("resources/objects/ModelosHanny/calacaPandero/brazoDer.obj");
+	Model BrazoArribaPandero("resources/objects/ModelosHanny/calacaPandero/brazoIzq.obj");
+	Model Pandero("resources/objects/ModelosHanny/calacaPandero/pandero.obj");
 
 	ModelAnim animacionPersonaje("resources/objects/Personaje1/Arm.dae");
 	animacionPersonaje.initShaders(animShader.ID);
-
-
 
 	//Inicialización de KeyFrames
 	for (int i = 0; i < MAX_FRAMES; i++)
@@ -960,7 +868,6 @@ int main() {
 		KeyFrame[i].anim1X = 0;
 		KeyFrame[i].anim1Y = 0;
 		KeyFrame[i].anim1Z = 0;
-
 	}
 
 	KeyFrame[0].anim1X = 122.0f;
@@ -983,22 +890,18 @@ int main() {
 	KeyFrame[4].anim1Y = 0.0f;
 	KeyFrame[4].anim1Z = -90.0f;
 
-	//KeyFrame[5].giroFantasma = -90.0f;
 	KeyFrame[5].anim1X = 80.0f;
 	KeyFrame[5].anim1Y = 0.0f;
 	KeyFrame[5].anim1Z = -90.0f;
 
-	//KeyFrame[6].giroFantasma = -90.0f;
 	KeyFrame[6].anim1X = 40.0f;
 	KeyFrame[6].anim1Y = 0.0f;
 	KeyFrame[6].anim1Z = -90.0f;
 
-	//KeyFrame[7].giroFantasma = -90.0f;
 	KeyFrame[7].anim1X = -4.0f;
 	KeyFrame[7].anim1Y = 0.0f;
 	KeyFrame[7].anim1Z = -90.0f;
 
-	//KeyFrame[8].giroFantasma = 0.0f;
 	KeyFrame[8].anim1X = -4.0f;
 	KeyFrame[8].anim1Y = 0.0f;
 	KeyFrame[8].anim1Z = -40.0f;
@@ -1031,131 +934,41 @@ int main() {
 	KeyFrame[15].anim1Y = -20.0f;
 	KeyFrame[15].anim1Z = -170.0f;
 
-
-	// =====================================================
-	// KEYFRAMES RÁPIDOS Y COMPLEJOS (12 CUADROS CLAVE)
-	// =====================================================
-	// Frame 0: Pose base arriba (Y = 22.0f)
-	KeyFrame[0].guitPosX = -18.0f; KeyFrame[0].guitPosY = 22.0f; KeyFrame[0].guitPosZ = 0.0f;
-	KeyFrame[0].guitGiroY = 0.0f; KeyFrame[0].guitInclinaX = 0.0f; KeyFrame[0].guitBalanceoZ = 0.0f;
-
-	KeyFrame[0].pandPosX = 18.0f; KeyFrame[0].pandPosY = 22.0f; KeyFrame[0].pandPosZ = 0.0f;
-	KeyFrame[0].pandGiroY = 0.0f; KeyFrame[0].pandInclinaX = 0.0f; KeyFrame[0].pandBalanceoZ = 0.0f; KeyFrame[0].pandShake = 0.0f;
-
-	// Frame 1: Golpe rítmico 1 (brinco + giro + sacudida de pandero)
-	KeyFrame[1].guitPosX = -17.0f; KeyFrame[1].guitPosY = 25.0f; KeyFrame[1].guitPosZ = 2.0f;
-	KeyFrame[1].guitGiroY = -20.0f; KeyFrame[1].guitInclinaX = -8.0f; KeyFrame[1].guitBalanceoZ = 10.0f;
-
-	KeyFrame[1].pandPosX = 17.0f; KeyFrame[1].pandPosY = 25.5f; KeyFrame[1].pandPosZ = 2.0f;
-	KeyFrame[1].pandGiroY = 20.0f; KeyFrame[1].pandInclinaX = 8.0f; KeyFrame[1].pandBalanceoZ = -10.0f; KeyFrame[1].pandShake = 0.12f;
-
-	// Frame 2: Contratiempo rápido al otro lado
-	KeyFrame[2].guitPosX = -19.0f; KeyFrame[2].guitPosY = 21.5f; KeyFrame[2].guitPosZ = -1.0f;
-	KeyFrame[2].guitGiroY = 20.0f; KeyFrame[2].guitInclinaX = 6.0f; KeyFrame[2].guitBalanceoZ = -10.0f;
-
-	KeyFrame[2].pandPosX = 19.0f; KeyFrame[2].pandPosY = 21.5f; KeyFrame[2].pandPosZ = -1.0f;
-	KeyFrame[2].pandGiroY = -20.0f; KeyFrame[2].pandInclinaX = -6.0f; KeyFrame[2].pandBalanceoZ = 10.0f; KeyFrame[2].pandShake = -0.10f;
-
-	// Frame 3: Solo de guitarra inclinado atrás + redoble pandero arriba
-	KeyFrame[3].guitPosX = -16.0f; KeyFrame[3].guitPosY = 26.0f; KeyFrame[3].guitPosZ = 3.0f;
-	KeyFrame[3].guitGiroY = -32.0f; KeyFrame[3].guitInclinaX = -15.0f; KeyFrame[3].guitBalanceoZ = 14.0f;
-
-	KeyFrame[3].pandPosX = 16.0f; KeyFrame[3].pandPosY = 26.5f; KeyFrame[3].pandPosZ = 3.0f;
-	KeyFrame[3].pandGiroY = 30.0f; KeyFrame[3].pandInclinaX = 12.0f; KeyFrame[3].pandBalanceoZ = -14.0f; KeyFrame[3].pandShake = 0.18f;
-
-	// Frame 4: Segundo golpe del redoble (rebote rápido)
-	KeyFrame[4].guitPosX = -16.5f; KeyFrame[4].guitPosY = 23.5f; KeyFrame[4].guitPosZ = 2.0f;
-	KeyFrame[4].guitGiroY = -15.0f; KeyFrame[4].guitInclinaX = -5.0f; KeyFrame[4].guitBalanceoZ = -6.0f;
-
-	KeyFrame[4].pandPosX = 16.5f; KeyFrame[4].pandPosY = 23.5f; KeyFrame[4].pandPosZ = 2.0f;
-	KeyFrame[4].pandGiroY = 15.0f; KeyFrame[4].pandInclinaX = 4.0f; KeyFrame[4].pandBalanceoZ = 6.0f; KeyFrame[4].pandShake = -0.05f;
-
-	// Frame 5: Tercer golpe del redoble arriba
-	KeyFrame[5].guitPosX = -16.0f; KeyFrame[5].guitPosY = 26.5f; KeyFrame[5].guitPosZ = 3.0f;
-	KeyFrame[5].guitGiroY = -35.0f; KeyFrame[5].guitInclinaX = -16.0f; KeyFrame[5].guitBalanceoZ = 15.0f;
-
-	KeyFrame[5].pandPosX = 16.0f; KeyFrame[5].pandPosY = 27.0f; KeyFrame[5].pandPosZ = 3.0f;
-	KeyFrame[5].pandGiroY = 32.0f; KeyFrame[5].pandInclinaX = 10.0f; KeyFrame[5].pandBalanceoZ = -15.0f; KeyFrame[5].pandShake = 0.20f;
-
-	// Frame 6: Duelo frente a frente (se acercan al centro girando hacia adentro)
-	KeyFrame[6].guitPosX = -12.0f; KeyFrame[6].guitPosY = 23.5f; KeyFrame[6].guitPosZ = 0.0f;
-	KeyFrame[6].guitGiroY = 45.0f; KeyFrame[6].guitInclinaX = 10.0f; KeyFrame[6].guitBalanceoZ = -8.0f;
-
-	KeyFrame[6].pandPosX = 12.0f; KeyFrame[6].pandPosY = 23.5f; KeyFrame[6].pandPosZ = 0.0f;
-	KeyFrame[6].pandGiroY = -45.0f; KeyFrame[6].pandInclinaX = 10.0f; KeyFrame[6].pandBalanceoZ = 8.0f; KeyFrame[6].pandShake = 0.14f;
-
-	// Frame 7: Intercambio rápido frente a frente
-	KeyFrame[7].guitPosX = -12.0f; KeyFrame[7].guitPosY = 25.5f; KeyFrame[7].guitPosZ = 0.0f;
-	KeyFrame[7].guitGiroY = 38.0f; KeyFrame[7].guitInclinaX = -8.0f; KeyFrame[7].guitBalanceoZ = 12.0f;
-
-	KeyFrame[7].pandPosX = 12.0f; KeyFrame[7].pandPosY = 25.5f; KeyFrame[7].pandPosZ = 0.0f;
-	KeyFrame[7].pandGiroY = -38.0f; KeyFrame[7].pandInclinaX = -8.0f; KeyFrame[7].pandBalanceoZ = -12.0f; KeyFrame[7].pandShake = -0.12f;
-
-	// Frame 8: Regresan abriendo el escenario
-	KeyFrame[8].guitPosX = -18.0f; KeyFrame[8].guitPosY = 23.0f; KeyFrame[8].guitPosZ = -2.0f;
-	KeyFrame[8].guitGiroY = -25.0f; KeyFrame[8].guitInclinaX = 6.0f; KeyFrame[8].guitBalanceoZ = -12.0f;
-
-	KeyFrame[8].pandPosX = 18.0f; KeyFrame[8].pandPosY = 23.0f; KeyFrame[8].pandPosZ = -2.0f;
-	KeyFrame[8].pandGiroY = 25.0f; KeyFrame[8].pandInclinaX = 6.0f; KeyFrame[8].pandBalanceoZ = 12.0f; KeyFrame[8].pandShake = 0.15f;
-
-	// Frame 9: Paso cruzado opuesto
-	KeyFrame[9].guitPosX = -18.0f; KeyFrame[9].guitPosY = 25.0f; KeyFrame[9].guitPosZ = 1.0f;
-	KeyFrame[9].guitGiroY = 22.0f; KeyFrame[9].guitInclinaX = -6.0f; KeyFrame[9].guitBalanceoZ = 12.0f;
-
-	KeyFrame[9].pandPosX = 18.0f; KeyFrame[9].pandPosY = 25.0f; KeyFrame[9].pandPosZ = 1.0f;
-	KeyFrame[9].pandGiroY = -22.0f; KeyFrame[9].pandInclinaX = -6.0f; KeyFrame[9].pandBalanceoZ = -12.0f; KeyFrame[9].pandShake = -0.10f;
-
-	// Frame 10: Remate final en alto
-	//KeyFrame[10].guitPosX = -18.0f; KeyFrame[10].guitPosY = 27.5f; KeyFrame[10].guitPosZ = 0.0f;
-	//KeyFrame[10].guitGiroY = 0.0f; KeyFrame[10].guitInclinaX = -12.0f; KeyFrame[10].guitBalanceoZ = 0.0f;
-
-	//KeyFrame[10].pandPosX = 18.0f; KeyFrame[10].pandPosY = 27.5f; KeyFrame[10].pandPosZ = 0.0f;
-	//KeyFrame[10].pandGiroY = 0.0f; KeyFrame[10].pandInclinaX = -12.0f; KeyFrame[10].pandBalanceoZ = 0.0f; KeyFrame[10].pandShake = 0.22f;
-
-	// Frame 11: Regreso exacto al Frame 0 para loop continuo
-	//KeyFrame[11] = KeyFrame[0];
-
 	// create transformations and Projection
 	glm::mat4 modelOp = glm::mat4(1.0f);		// initialize Matrix, Use this matrix for individual models
 	glm::mat4 viewOp = glm::mat4(1.0f);		//Use this matrix for ALL models
 	glm::mat4 projectionOp = glm::mat4(1.0f);	//This matrix is for Projection
 
+	lastFrame = glfwGetTime();
+
 	// render loop
 	// -----------
 	while (!glfwWindowShouldClose(window))
 	{
-		skyboxShader.setInt("skybox", 0);
+		// per-frame time logic (en segundos)
+		// -----------------------------------
+		double currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
 
-		// per-frame time logic
-		// --------------------
-		lastFrame = SDL_GetTicks();
-
-		// input
-		// -----
-		//my_input(window);
+		// input & logic
+		// -------------
 		animate();
 		animations();
 		visuales();
 
-		// render
-		// ------
-		//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		// render
 		// Selección de cámara: vista normal (tercera persona) o vista cenital (ortográfica)
 		glm::vec3 posCamara;
 		if (vistaCenital)
 		{
 			moverCamaraCenital(window);
 
-			// El aspecto se toma del tamaño real del framebuffer para que el mapa no se deforme
 			int anchoFB = 0, altoFB = 0;
 			glfwGetFramebufferSize(window, &anchoFB, &altoFB);
 			if (altoFB == 0) altoFB = 1;
 			float aspecto = (float)anchoFB / (float)altoFB;
 
 			posCamara = glm::vec3(centroCenital.x, 500.0f, centroCenital.y);
-			// up = -Z: el norte (-Z) queda hacia arriba en pantalla y +X hacia la derecha
 			viewOp = glm::lookAt(posCamara, glm::vec3(centroCenital.x, 0.0f, centroCenital.y), glm::vec3(0.0f, 0.0f, -1.0f));
 			projectionOp = glm::ortho(-zoomCenital * aspecto, zoomCenital * aspecto, -zoomCenital, zoomCenital, 0.1f, 2000.0f);
 			glClearColor(0.12f, 0.12f, 0.14f, 1.0f);
@@ -1169,10 +982,8 @@ int main() {
 		}
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// don't forget to enable shader before setting uniforms
-		//Setup shader for static models
+		// Setup shader for static models
 		staticShader.use();
-		//Setup Advanced Lights
 		staticShader.setVec3("viewPos", camera.Position);
 		staticShader.setVec3("dirLight.direction", lightDirection);
 		staticShader.setVec3("dirLight.ambient", glm::vec3(0.5f, 0.5f, 0.5f));
@@ -1196,7 +1007,7 @@ int main() {
 		staticShader.setFloat("pointLight[1].quadratic", 0.00000032f);
 
 		staticShader.setVec3("pointLight[2].position", lightPosition02);
-		staticShader.setVec3("pointLight[2].ambient", glm::vec3(0.0f, 0.f, 0.0f));
+		staticShader.setVec3("pointLight[2].ambient", glm::vec3(0.0f, 0.0f, 0.0f));
 		staticShader.setVec3("pointLight[2].diffuse", glm::vec3(0.0f, 0.0f, 0.0f));
 		staticShader.setVec3("pointLight[2].specular", glm::vec3(0.0f, 0.0f, 0.0f));
 		staticShader.setFloat("pointLight[2].constant", 1.0f);
@@ -1215,52 +1026,42 @@ int main() {
 		staticShader.setFloat("spotLight[0].quadratic", 0.0005f);
 
 		staticShader.setFloat("material_shininess", 32.0f);
-
 		staticShader.setMat4("projection", projectionOp);
 		staticShader.setMat4("view", viewOp);
 
-		
-		//Setup shader for primitives
+		// Setup shader for primitives (sin sobrescribir viewOp para respetar vistaCenital)
 		myShader.use();
-		// view/projection transformations
-		//projectionOp = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 400.0f);
-		viewOp = camera.GetViewMatrix();
-		// pass them to the shaders
-		//myShader.setMat4("model", modelOp);
 		myShader.setMat4("view", viewOp);
-		// note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
 		myShader.setMat4("projection", projectionOp);
-		/**********/
 
+		// Dibujar Skybox de galaxia
 		skyboxShader.use();
 		skybox.Draw(skyboxShader, viewOp, projectionOp, camera);
 
-
 		// -------------------------------------------------------------------------------------------------------------------------
-		// Escenario Primitivas
+		// Escenario Primitivas (Piso texturizado con repetición UV)
 		// -------------------------------------------------------------------------------------------------------------------------
 		myShader.use();
-
-		//glBindVertexArray(0);
-		// ------------------------------------------------------------------------------------------------------------------------
-		// Termina Escenario Primitivas
+		glBindVertexArray(VAO[2]);
+		myShader.setMat4("model", modelPiso);
+		myShader.setVec3("aColor", 1.0f, 1.0f, 1.0f);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, t_suelo);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
 		// -------------------------------------------------------------------------------------------------------------------------
 
 		// -------------------------------------------------------------------------------------------------------------------------
-		// Escenario
+		// Escenario (Modelos 3D)
 		// -------------------------------------------------------------------------------------------------------------------------
 		staticShader.use();
 		staticShader.setMat4("projection", projectionOp);
 		staticShader.setMat4("view", viewOp);
 
-		glm::mat4 refPiso = glm::mat4(1.0f);
+		// Nodo padre de referencia para Hacienda y Cementerio (se mantiene sin dibujar Piso3.obj)
+		glm::mat4 refPiso = glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, -10.0f));
 		glm::mat4 refCementerio = glm::mat4(1.0f);
 		glm::mat4 refHacienda = glm::mat4(1.0f);
-
-		refPiso = modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, -10.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.25f,0.2f, 0.35f));
-		staticShader.setMat4("model", modelOp);
-		piso.Draw(staticShader);
 
 		refHacienda = modelOp = glm::translate(refPiso, glm::vec3(0.0f, -10.0f, 0.0f));
 		modelOp = glm::scale(modelOp, glm::vec3(4.0f, 3.4f, 4.0f));
@@ -1274,31 +1075,23 @@ int main() {
 
 		refCementerio = modelOp = glm::translate(refPiso, glm::vec3(0.0f, -2.0f, -500.0f));
 		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(1.8f,1.2f,1.5f));
+		modelOp = glm::scale(modelOp, glm::vec3(1.8f, 1.5f, 1.5f));
 		staticShader.setMat4("model", modelOp);
 		Cementerio.Draw(staticShader);
 
 		modelOp = glm::translate(refCementerio, glm::vec3(0.0f, 0.0f, -40.0f));
 		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.4f));
+		modelOp = glm::scale(modelOp, glm::vec3(2.4f));
 		staticShader.setMat4("model", modelOp);
 		catrina.Draw(staticShader);
 
-
-		//glEnable(GL_BLEND); // Activa la mezcla de colores para permitir que los objetos puedan tener transparencia.
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		// Establece cómo se combinará el color del objeto con el fondo, utilizando el canal alfa para controlar la transparencia.
 		modelOp = glm::translate(refCementerio, glm::vec3(anim1X, anim1Y, anim1Z));
 		modelOp = glm::rotate(modelOp, glm::radians(giroFantasma), glm::vec3(0.0f, 1.0f, 0.0f));
 		modelOp = glm::scale(modelOp, glm::vec3(0.3f));
 		staticShader.setMat4("model", modelOp);
 		Fantasma.Draw(staticShader);
-		//glDisable(GL_BLEND);
-		// Desactiva la mezcla de colores para evitar que los siguientes objetos dibujados hereden el efecto de transparencia.
 
-
-		float tumbas=-120;
-
+		float tumbas = -120;
 		for (int i = 0; i < 4; i++) {
 			tumbas += 60.5;
 			modelOp = glm::translate(refCementerio, glm::vec3(tumbas, -1.0f, -170.0f));
@@ -1307,6 +1100,24 @@ int main() {
 			staticShader.setMat4("model", modelOp);
 			Tumbas.Draw(staticShader);
 		}
+
+		// -------------------------------------------------------------------------
+		// Nuevos Árboles (Método 1: colocados con tecla 'T' o desde posArboles)
+		// -------------------------------------------------------------------------
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		for (size_t i = 0; i < posArboles.size(); i++)
+		{
+			float rotY = (float)((i * 53) % 360);
+			float varEscala = escalaNuevoArbol * (0.85f + 0.30f * sin((float)i * 1.9f));
+
+			modelOp = glm::translate(glm::mat4(1.0f), posArboles[i]);
+			modelOp = glm::rotate(modelOp, glm::radians(rotY), glm::vec3(0.0f, 1.0f, 0.0f));
+			modelOp = glm::scale(modelOp, glm::vec3(varEscala));
+			staticShader.setMat4("model", modelOp);
+			nuevoArbol.Draw(staticShader);
+		}
+		glDisable(GL_BLEND);
 
 		//Hombre sin cabeza
 		modelOp = glm::translate(refCementerio, glm::vec3(anim2X, 1.0f, anim2Z));
@@ -1321,6 +1132,53 @@ int main() {
 		modelOp = glm::scale(modelOp, glm::vec3(0.2f));
 		staticShader.setMat4("model", modelOp);
 		Mujer.Draw(staticShader);
+		
+		
+
+		// =====================================================
+		// CALACA 2: PANDERO 
+		// =====================================================
+		glm::mat4 refCuerpoCalacaPandero = glm::translate(
+			refPiso,
+			glm::vec3(0.0f, 10.5f, 100.0f)
+		);
+		refCuerpoCalacaPandero = glm::rotate(
+			refCuerpoCalacaPandero,
+			glm::radians(pandGiroY),
+			glm::vec3(0.0f, 1.0f, 0.0f)
+		);
+		refCuerpoCalacaPandero = glm::rotate(
+			refCuerpoCalacaPandero,
+			glm::radians(pandInclinaX),
+			glm::vec3(1.0f, 0.0f, 0.0f)
+		);
+		refCuerpoCalacaPandero = glm::rotate(
+			refCuerpoCalacaPandero,
+			glm::radians(pandBalanceoZ),
+			glm::vec3(0.0f, 0.0f, 1.0f)
+		);
+		refCuerpoCalacaPandero = glm::scale(
+			refCuerpoCalacaPandero,
+			glm::vec3(8.0f)
+		);
+
+		// Cuerpo, cabeza y piernas unidos
+		staticShader.setMat4("model", refCuerpoCalacaPandero);
+		CuerpoPandero.Draw(staticShader);
+		CaraPandero.Draw(staticShader);
+		PderPandero.Draw(staticShader);
+		PizqArribaPandero.Draw(staticShader);
+		PizqAbajoPandero.Draw(staticShader);
+
+		// Brazo Derecho
+		glm::mat4 refBrazoDer = glm::translate(
+			refCuerpoCalacaPandero,
+			glm::vec3(brazoDerOffX, brazoDerOffY + pandShake, brazoDerOffZ)
+		);
+		staticShader.setMat4("model", refBrazoDer);
+		BrazoDerPandero.Draw(staticShader);
+
+
 
 
 
@@ -1378,100 +1236,12 @@ int main() {
 		BotaIzqAquaman.Draw(staticShader);
 		
 		
-		//-------------------------------------------------------------------------
-		// DIBUJAR CALACAS
-		//-------------------------------------------------------------------------
-		// =====================================================
-		// CALACA 1: GUITARRA 
-		// =====================================================
-		glm::mat4 refCuerpoCalacaGuitarra = glm::translate(
-			glm::mat4(1.0f),
-			glm::vec3(guitPosX, guitPosY, guitPosZ)
-		);
-		refCuerpoCalacaGuitarra = glm::rotate(
-			refCuerpoCalacaGuitarra,
-			glm::radians(guitGiroY),
-			glm::vec3(0.0f, 1.0f, 0.0f)
-		);
-		refCuerpoCalacaGuitarra = glm::rotate(
-			refCuerpoCalacaGuitarra,
-			glm::radians(guitInclinaX),
-			glm::vec3(1.0f, 0.0f, 0.0f)
-		);
-		refCuerpoCalacaGuitarra = glm::rotate(
-			refCuerpoCalacaGuitarra,
-			glm::radians(guitBalanceoZ),
-			glm::vec3(0.0f, 0.0f, 1.0f)
-		);
-		refCuerpoCalacaGuitarra = glm::scale(
-			refCuerpoCalacaGuitarra,
-			glm::vec3(8.0f)
-		);
-
-		staticShader.setMat4("model", refCuerpoCalacaGuitarra);
-		CuerpoGuitarra.Draw(staticShader);
-		CaraGuitarra.Draw(staticShader);
-		PderGuitarra.Draw(staticShader);
-		PizqGuitarra.Draw(staticShader);
-
-		// =====================================================
-		// CALACA 2: PANDERO 
-		// =====================================================
-		glm::mat4 refCuerpoCalacaPandero = glm::translate(
-			glm::mat4(1.0f),
-			glm::vec3(pandPosX, pandPosY, pandPosZ)
-		);
-		refCuerpoCalacaPandero = glm::rotate(
-			refCuerpoCalacaPandero,
-			glm::radians(pandGiroY),
-			glm::vec3(0.0f, 1.0f, 0.0f)
-		);
-		refCuerpoCalacaPandero = glm::rotate(
-			refCuerpoCalacaPandero,
-			glm::radians(pandInclinaX),
-			glm::vec3(1.0f, 0.0f, 0.0f)
-		);
-		refCuerpoCalacaPandero = glm::rotate(
-			refCuerpoCalacaPandero,
-			glm::radians(pandBalanceoZ),
-			glm::vec3(0.0f, 0.0f, 1.0f)
-		);
-		refCuerpoCalacaPandero = glm::scale(
-			refCuerpoCalacaPandero,
-			glm::vec3(8.0f)
-		);
-
-		// Cuerpo, cabeza y piernas unidos
-		staticShader.setMat4("model", refCuerpoCalacaPandero);
-		CuerpoPandero.Draw(staticShader);
-		CaraPandero.Draw(staticShader);
-		PderPandero.Draw(staticShader);
-		PizqArribaPandero.Draw(staticShader);
-		PizqAbajoPandero.Draw(staticShader);
-
-		// Brazo Derecho
-		glm::mat4 refBrazoDer = glm::translate(
-			refCuerpoCalacaPandero,
-			glm::vec3(brazoDerOffX, brazoDerOffY + pandShake, brazoDerOffZ)
-		);
-		staticShader.setMat4("model", refBrazoDer);
-		BrazoDerPandero.Draw(staticShader);
-
-		// Brazo Izquierdo + Pandero 
-		glm::mat4 refBrazoIzq = glm::translate(
-			refCuerpoCalacaPandero,
-			glm::vec3(brazoIzqOffX, brazoIzqOffY + pandShake, brazoIzqOffZ)
-		);
-		staticShader.setMat4("model", refBrazoIzq);
-		BrazoArribaPandero.Draw(staticShader);
-		Pandero.Draw(staticShader);
-
 		// -------------------------------------------------------------------------------------------------------------------------
 		// Marcador del personaje (solo en la vista cenital)
 		// Cuadro rojo = posición del personaje, cuadro amarillo = hacia dónde mira.
 		// Su tamaño es proporcional al zoom para que se vea igual de grande en pantalla.
 		// -------------------------------------------------------------------------------------------------------------------------
-		/*if (vistaCenital)
+		if (vistaCenital)
 		{
 			myShader.use();
 			glBindVertexArray(VAO[0]);
@@ -1498,7 +1268,7 @@ int main() {
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 			glBindVertexArray(0);
-		}*/
+		}
 
 
 		//------------------------------------------------------------------------------------
@@ -1528,33 +1298,33 @@ int main() {
 		skybox.Draw(skyboxShader, viewOp, projectionOp, camera);*/
 
 		// Limitar el framerate a 60
-		deltaTime = SDL_GetTicks() - lastFrame; // time for full 1 loop
-		if (deltaTime < LOOP_TIME)
+		double frameElapsedMs = (glfwGetTime() - currentFrame) * 1000.0;
+		if (frameElapsedMs < LOOP_TIME)
 		{
-			SDL_Delay((int)(LOOP_TIME - deltaTime));
+			SDL_Delay((int)(LOOP_TIME - frameElapsedMs));
 		}
 
-		
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+
 	// glfw: terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------------
-	glDeleteVertexArrays(2, VAO);
-	glDeleteBuffers(2, VBO);
-	//skybox.Terminate();
+	glDeleteVertexArrays(3, VAO);
+	glDeleteBuffers(3, VBO);
+	glDeleteBuffers(3, EBO);
 	glfwTerminate();
 	return 0;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void my_input(GLFWwindow* window, int key, int scancode, int action, int mode) 
+void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-
-	float velocidad = 0.5f * (float)deltaTime;
+	float dtEscala = (float)deltaTime * 60.0f;
+	float velocidad = 0.5f * dtEscala;
 
 	// Obtener el ángulo de giro del personaje
 	float angulo = glm::radians(giroMonito);
@@ -1569,16 +1339,22 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && person==false)
-		camera.ProcessKeyboard(FORWARD, (float)deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && person == false)
-		camera.ProcessKeyboard(BACKWARD, (float)deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && person == false)
-		camera.ProcessKeyboard(LEFT, (float)deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && person == false)
-		camera.ProcessKeyboard(RIGHT, (float)deltaTime);
-	
-	
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && person == false) {
+		camera.ProcessKeyboard(FORWARD, dtEscala);
+		modoCinematico = false;
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && person == false) {
+		camera.ProcessKeyboard(BACKWARD, dtEscala);
+		modoCinematico = false;
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && person == false) {
+		camera.ProcessKeyboard(LEFT, dtEscala);
+		modoCinematico = false;
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && person == false) {
+		camera.ProcessKeyboard(RIGHT, dtEscala);
+		modoCinematico = false;
+	}
 
 	//To Configure Model
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && person == true)
@@ -1593,7 +1369,6 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 		posZ -= direccion.z * velocidad;
 		perspect = true;
 	}
-		//posZ -= 5.0f * deltaTime;
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && person == true)
 	{
 		posX -= direccion.z * velocidad;
@@ -1606,49 +1381,79 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 		posZ -= direccion.x * velocidad;
 		perspect = true;
 	}
-	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
 		person = false;
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+		modoCinematico = false;
+	}
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
 		person = true;
+		modoCinematico = false;
+	}
 
 	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
 		lightPosition.x++;
 	if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
 		lightPosition.x--;
 
+	// -------------------------------------------------------------------------
+	// Controles interactivos para colocar y calibrar nuevoArbol (Método 1)
+	// -------------------------------------------------------------------------
+	if (key == GLFW_KEY_T && action == GLFW_PRESS)
+	{
+		float x = 0.0f, z = 0.0f;
+
+		if (vistaCenital) {
+			x = centroCenital.x;
+			z = centroCenital.y;
+		}
+		else if (person) {
+			x = posX;
+			z = posZ;
+		}
+		else {
+			x = camera.Position.x;
+			z = camera.Position.z;
+		}
+
+		posArboles.push_back(glm::vec3(x, 0.0f, z));
+		std::cout << "glm::vec3(" << x << "f, 0.0f, " << z << "f)," << std::endl;
+	}
+
+	if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS && !posArboles.empty())
+	{
+		posArboles.pop_back();
+		std::cout << "[INFO] Ultimo arbol eliminado. Total: " << posArboles.size() << std::endl;
+	}
+
+	if (key == GLFW_KEY_U && action == GLFW_PRESS)
+	{
+		escalaNuevoArbol += 0.5f;
+		std::cout << "[INFO] escalaNuevoArbol = " << escalaNuevoArbol << "f" << std::endl;
+	}
+
+	if (key == GLFW_KEY_J && action == GLFW_PRESS)
+	{
+		escalaNuevoArbol = glm::max(0.1f, escalaNuevoArbol - 0.5f);
+		std::cout << "[INFO] escalaNuevoArbol = " << escalaNuevoArbol << "f" << std::endl;
+	}
+
 	//perspectiva
 	if (key == GLFW_KEY_I && action == GLFW_PRESS)
 	{
 		perspect = !perspect;
-		
 	}
 
 	// Alternar la vista cenital (plano visto desde arriba) con la tecla 'V'
 	if (key == GLFW_KEY_V && action == GLFW_PRESS)
 	{
 		vistaCenital = !vistaCenital;
+		if (vistaCenital)
+			modoCinematico = false;
 	}
 
 	//Car animation
 	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
 		animacion ^= true;
-
-
-	//Ver Escenas
-	if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
-		person = false;
-		verEscen = true;
-	}
-
-	if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
-		person = false;
-		verAnim = true;
-	}
-
-	if (key == GLFW_KEY_3 && action == GLFW_PRESS) {
-		person = false;
-		verModel = true;
-	}
 
 	//To play KeyFrame animation 
 	if (key == GLFW_KEY_P && action == GLFW_PRESS)
@@ -1657,7 +1462,6 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 		{
 			std::cout << "Play animation" << std::endl;
 			resetElements();
-			//First Interpolation				
 			interpolation();
 
 			play = true;
@@ -1679,54 +1483,43 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 			saveFrame();
 		}
 	}
-
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-	// make sure the viewport matches the new window dimensions; note that width and 
-	// height will be significantly larger than specified on retina displays.
 	glViewport(0, 0, width, height);
 }
 
 // glfw: whenever the mouse moves, this callback is called
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) 
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
 	if (firstMouse)
 	{
-		lastX = xpos;
-		lastY = ypos;
+		lastX = (GLfloat)xpos;
+		lastY = (GLfloat)ypos;
 		firstMouse = false;
 	}
 
 	double xoffset = xpos - lastX;
-	double yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+	double yoffset = lastY - ypos;
 
-	lastX = xpos;
-	lastY = ypos;
-
-	
+	lastX = (GLfloat)xpos;
+	lastY = (GLfloat)ypos;
 
 	if (person) {
-		//giroMonito += (float)xoffset * 0.1;
 		giroMonito -= (float)xoffset * mouseSensitivity;
-
-		// El movimiento vertical inclina solamente la cámara
-		cameraPitch += yoffset * mouseSensitivity * 3;
-
-		// Limitar la inclinación para evitar que la cámara dé vueltas
+		cameraPitch += (float)yoffset * mouseSensitivity * 3.0f;
 		cameraPitch = glm::clamp(cameraPitch, -10.0f, 120.0f);
 	}
 	else {
-		camera.ProcessMouseMovement(xoffset, yoffset);
+		camera.ProcessMouseMovement((float)xoffset, (float)yoffset);
 	}
-
-	
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-	camera.ProcessMouseScroll(yoffset);
+	if (vistaCenital)
+		zoomCenital = glm::clamp(zoomCenital - (float)yoffset * 15.0f, 20.0f, 1000.0f);
+	else
+		camera.ProcessMouseScroll((float)yoffset);
 }
-
-
