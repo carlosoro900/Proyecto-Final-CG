@@ -10,6 +10,9 @@ ipch/
 
 # Archivos temporales
 ofrenda1.obj
+resources/objects/ModelosHanny/calacaPandero/cuerpo.obj
+resources/objects/ModelosHanny/calacaGuitarra/cuerpo.obj
+resources/objects/ModelosHanny/calacaGuitarra/piernaDer.obj
 #exHacienda.obj
 exHacienda1.obj
 exHacienda2.obj
