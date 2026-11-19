@@ -9,7 +9,7 @@ Release/
 ipch/
 
 # Archivos temporales
-ofrenda1.obj
+
 resources/objects/ModelosHanny/calacaPandero/cuerpo.obj
 resources/objects/ModelosHanny/calacaGuitarra/cuerpo.obj
 resources/objects/ModelosHanny/calacaGuitarra/piernaDer.obj
@@ -19,8 +19,7 @@ resources/objects/ModelosHanny/escenario/escenario.obj
 resources/objects/ModelosCarlos/arbol_verde1/arbol_verde.obj
 resources/objects/ModelosCarlos/iglesia/iglesia.obj
 
-#exHacienda.obj
-exHacienda1.obj
+
 exHacienda2.obj
 
 #cuerpo.obj

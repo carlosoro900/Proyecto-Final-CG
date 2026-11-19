@@ -54,8 +54,8 @@ GLuint VBO[3], VAO[3], EBO[3];
 //Camera
 Camera camera(glm::vec3(250.0f, 20.0f, 410.0f));
 
-float cameraDistance = 70.0f;
-float cameraHeight = 30.0f;
+float cameraDistance = 75.0f;
+float cameraHeight = 35.0f;
 float cameraYaw = 0.0f;
 float cameraPitch = 10.0f;
 
@@ -84,7 +84,7 @@ double	deltaTime = 0.0f,
 lastFrame = 0.0f;
 
 
-bool verEscen=false, verModel=false, verAnim=false;
+bool verEscen=false, verModel=false, verAnim=false, verHacienda = false;
 
 void getResolution(void);
 void myData(void);							// De la practica 4
@@ -95,6 +95,9 @@ float	movX = 0.0f,
 movY = 0.0f,
 movZ = -5.0f,
 rotX = 0.0f;
+
+//Texture
+//unsigned int	t_unam, t_suelo;
 
 
 //Lighting
@@ -185,7 +188,7 @@ pandShakeInc = 0.0f;
 
 //Keyframes (Manipulación y dibujo)
 float	posX = 250.0f,
-		posY = 2.0f,
+		posY = 3.0f,
 		posZ = 360.0f,
 		anim1X = 122.0f,
 		anim1Y = -20.0f,
@@ -804,8 +807,13 @@ void animations() {
 		giroFantasma2 = 0;
 		anim2X += velocidad;
 
-		if (lightPosition01.x >= 300)
+		if (lightPosition01.x >= 300) {
 			lightPosition01.x = lightPosition01.x - 1;
+
+			if (lightPosition01.z > -510) lightPosition01.z--;
+
+			if (lightPosition01.z < -510) lightPosition01.z++;
+		}
 
 		if (anim2X >= 190) paso++;
 			
@@ -840,8 +848,13 @@ void animations() {
 		giroFantasma2 = 270;
 		anim2Z += velocidad;
 
-		if (lightPosition01.x <= 500)
+		if (lightPosition01.x <= 500) {
 			lightPosition01.x = lightPosition01.x + 1;
+
+			if (lightPosition01.z > -510) lightPosition01.z--;
+
+			if (lightPosition01.z < -510) lightPosition01.z++;
+		}
 
 		if (anim2Z >= 150) paso++;
 			
@@ -975,19 +988,39 @@ void visuales() {
 
 		glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
 
-		camera.Position = glm::vec3(240.0f, 8.3f, -480.0f);
+		camera.Position = glm::vec3(400.0f, 22.3f, -420.0f);
 
 		camera.Front = glm::normalize(
-			glm::vec3(240.0f, 8.3f, -580.0f) - camera.Position
+			glm::vec3(400.0f, 22.3f, -840.0f) - camera.Position
 		);
 
 		camera.Up = worldUp;
 
 		verModel = false;
 	}
+
+	if (verHacienda) {
+
+		glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
+
+		camera.Position = glm::vec3(250.0f, 20.0f, 410.0f);
+
+		camera.Front = glm::normalize(
+			glm::vec3(250.0f, 20.0f, 0.0f) - camera.Position
+		);
+
+		camera.Up = worldUp;
+
+		verHacienda = false;
+	}
 }
 
-
+/*void LoadTextures()
+{
+	t_unam = generateTextures("Texturas/escudo_unam.jpg", 0, true);
+	t_suelo = generateTextures("Texturas/PavingStones/adoquin.jpg", 0, true);	// Piso (práctica 6)
+	
+}*/
 
 int main() {
 	// Inicializar GLFW
@@ -1209,13 +1242,12 @@ int main() {
 	
 	Model alebrije("resources/objects/ModelosCarlos/alebrije2/alebrije2.obj");
 	comprobarArchivo("resources/objects/ModelosCarlos/alebrije2/alebrije2.obj");
-	//catrin.initShaders(animShader.ID);
 
 
 
 
-	ModelAnim animacionPersonaje("resources/objects/Personaje1/Arm.dae");
-	animacionPersonaje.initShaders(animShader.ID);
+	/*ModelAnim animacionPersonaje("resources/objects/Personaje1/Arm.dae");
+	animacionPersonaje.initShaders(animShader.ID);*/
 
 
 
@@ -1380,6 +1412,11 @@ int main() {
 	// Frame 11: Regreso exacto al Frame 0 para loop continuo
 	//KeyFrame[11] = KeyFrame[0];
 
+	// Piso texturizado (VAO[2]) centrado en el escenario; mide ±(40 * escalaCordillera) para empatar con la cordillera
+	//glm::mat4 modelPiso = glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.5f, -10.0f));
+	//modelPiso = glm::rotate(modelPiso, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	//modelPiso = glm::scale(modelPiso, glm::vec3(40.0f ));
+
 	// create transformations and Projection
 	glm::mat4 modelOp = glm::mat4(1.0f);		// initialize Matrix, Use this matrix for individual models
 	glm::mat4 viewOp = glm::mat4(1.0f);		//Use this matrix for ALL models
@@ -1506,8 +1543,7 @@ int main() {
 		// -------------------------------------------------------------------------------------------------------------------------
 		// Escenario Primitivas
 		// -------------------------------------------------------------------------------------------------------------------------
-		myShader.use();
-
+		
 		//glBindVertexArray(0);
 		// ------------------------------------------------------------------------------------------------------------------------
 		// Termina Escenario Primitivas
@@ -2043,93 +2079,15 @@ int main() {
 		BrazoArribaPandero.Draw(staticShader);
 		Pandero.Draw(staticShader);
 
-
-		// =====================================================
-		// CATRINA ARTICULADA (baile de la práctica 6)
-		// =====================================================
-		// 1. Torso (matriz padre)
-		/*glm::mat4 modelCuerpoCatrina = glm::translate(refCementerio, glm::vec3(0.0f, 0.0f, -40.0f));
-		modelCuerpoCatrina = glm::rotate(modelCuerpoCatrina, glm::radians(catGiro), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelCuerpoCatrina = glm::scale(modelCuerpoCatrina, glm::vec3(catEscala));
-		staticShader.setMat4("model", modelCuerpoCatrina);
-		CatrinaCuerpo.Draw(staticShader);
-
-		glm::mat4 modelTempCatrina = glm::mat4(1.0f);
-
-		// 2. Cabeza (gira en eje Y sobre el cuello)
-		modelTempCatrina = modelCuerpoCatrina;
-		modelTempCatrina = glm::translate(modelTempCatrina, catPivCabeza);
-		modelTempCatrina = glm::rotate(modelTempCatrina, glm::radians(catRotCabeza), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelTempCatrina = glm::translate(modelTempCatrina, -catPivCabeza);
-		staticShader.setMat4("model", modelTempCatrina);
-		CatrinaCabeza.Draw(staticShader);
-
-		// 3. Brazo derecho (gira en eje Z)
-		modelTempCatrina = modelCuerpoCatrina;
-		modelTempCatrina = glm::translate(modelTempCatrina, catPivBrazoDer);
-		modelTempCatrina = glm::rotate(modelTempCatrina, glm::radians(catRotBrazoDer), glm::vec3(0.0f, 0.0f, 1.0f));
-		modelTempCatrina = glm::translate(modelTempCatrina, -catPivBrazoDer);
-		staticShader.setMat4("model", modelTempCatrina);
-		CatrinaBrazoDer.Draw(staticShader);
-
-		// 4. Brazo izquierdo (gira en eje Z en sentido opuesto para simetría)
-		modelTempCatrina = modelCuerpoCatrina;
-		modelTempCatrina = glm::translate(modelTempCatrina, catPivBrazoIzq);
-		modelTempCatrina = glm::rotate(modelTempCatrina, glm::radians(-catRotBrazoIzq), glm::vec3(0.0f, 0.0f, 1.0f));
-		modelTempCatrina = glm::translate(modelTempCatrina, -catPivBrazoIzq);
-		staticShader.setMat4("model", modelTempCatrina);
-		CatrinaBrazoIzq.Draw(staticShader);
-
-		// Cubos rojos guía de los pivotes: solo en modo catrina y con el baile pausado
-		if (modoCatrina && catMostrarPivotes && !catBaile)
-		{
-			myShader.use();
-			glm::vec3 pivotes[3] = { catPivCabeza, catPivBrazoDer, catPivBrazoIzq };
-			for (int p = 0; p < 3; p++)
-			{
-				glm::mat4 mPiv = glm::translate(modelCuerpoCatrina, pivotes[p]);
-				mPiv = glm::scale(mPiv, glm::vec3(catEscalaMarcador));
-				myShader.setMat4("model", mPiv);
-				myShader.setVec3("aColor", 1.0f, 0.0f, 0.0f);
-				//glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-			staticShader.use();
-		}*/
-
-		// -------------------------------------------------------------------------------------------------------------------------
-		// Marcador del personaje (solo en la vista cenital)
-		// Cuadro rojo = posición del personaje, cuadro amarillo = hacia dónde mira.
-		// Su tamaño es proporcional al zoom para que se vea igual de grande en pantalla.
-		// -------------------------------------------------------------------------------------------------------------------------
-		/*if (vistaCenital)
-		{
-			myShader.use();
-			glBindVertexArray(VAO[0]);
-			glBindTexture(GL_TEXTURE_2D, t_white);
-
-			float tam = zoomCenital * 0.03f;
-
-			glm::mat4 refMarcador = glm::translate(glm::mat4(1.0f), glm::vec3(posX, 400.0f, posZ));
-			refMarcador = glm::rotate(refMarcador, glm::radians(giroMonito), glm::vec3(0.0f, 1.0f, 0.0f));
-
-			// Cuerpo (acostado sobre el plano XZ)
-			modelOp = glm::rotate(refMarcador, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			modelOp = glm::scale(modelOp, glm::vec3(tam, tam, 1.0f));
-			myShader.setMat4("model", modelOp);
-			myShader.setVec3("aColor", 1.0f, 0.0f, 0.0f);
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-			// Punta hacia el frente del personaje (+Z local)
-			modelOp = glm::translate(refMarcador, glm::vec3(0.0f, 1.0f, tam * 0.9f));
-			modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			modelOp = glm::scale(modelOp, glm::vec3(tam * 0.5f, tam * 0.5f, 1.0f));
-			myShader.setMat4("model", modelOp);
-			myShader.setVec3("aColor", 1.0f, 1.0f, 0.0f);
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-			glBindVertexArray(0);
-		}*/
-
+		/*myShader.use();
+		glBindVertexArray(VAO[2]);
+		myShader.setMat4("model", modelPiso);
+		myShader.setVec3("aColor", 1.0f, 1.0f, 1.0f);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, t_suelo);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);*/
+		
 		// Dibujar las barras cinematográficas encima de todo
 		dibujarBarrasCinematicas(myShader);
 
@@ -2323,6 +2281,12 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 	if (key == GLFW_KEY_3 && action == GLFW_PRESS) {
 		person = false;
 		verModel = true;
+		modoCinematico = true;
+	}
+
+	if (key == GLFW_KEY_4 && action == GLFW_PRESS) {
+		person = false;
+		verHacienda = true;
 		modoCinematico = true;
 	}
 
