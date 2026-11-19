@@ -29,6 +29,8 @@
 #include <fstream>
 //#include <iostream>
 #include <string>
+#include <cstdlib>
+#include <ctime>
 
 
 
@@ -38,6 +40,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void my_input(GLFWwindow* window, int key, int scancode, int action, int mods);
 void animate(void);
 void moverCamaraCenital(GLFWwindow* window);
+void dibujarBarrasCinematicas(Shader& shader2D);
+
 
 // settings
 unsigned int SCR_WIDTH = 800;
@@ -46,11 +50,12 @@ GLFWmonitor* monitors;
 
 GLuint VBO[3], VAO[3], EBO[3];
 
-//Camera
-Camera camera(glm::vec3(0.0f, 10.0f, 3.0f));
 
-float cameraDistance = 30.0f;
-float cameraHeight = 10.0f;
+//Camera
+Camera camera(glm::vec3(250.0f, 20.0f, 410.0f));
+
+float cameraDistance = 70.0f;
+float cameraHeight = 30.0f;
 float cameraYaw = 0.0f;
 float cameraPitch = 10.0f;
 
@@ -67,6 +72,10 @@ bool firstMouse = true;
 bool vistaCenital = false;					// Se activa/desactiva con la tecla V
 float zoomCenital = 200.0f;					// Mitad de la altura visible, en unidades del mundo
 glm::vec2 centroCenital(200.0f, -10.0f);	// Punto (X, Z) del escenario que mira la vista cenital
+
+// Barras negras cinemáticas (letterbox) al presionar 1, 2 o 3
+bool modoCinematico = false;
+float alturaBarraCinematica = 0.0f;			// 0.0f = ocultas, 0.13f = franjas cinemáticas activas
 
 //Timing
 const int FPS = 60;
@@ -89,10 +98,10 @@ rotX = 0.0f;
 
 
 //Lighting
-glm::vec3 lightPosition(0.0f, 4.0f, -10.0f);
+glm::vec3 lightPosition(150.0f, -2.0f, -500.0f);
 glm::vec3 lightDirection(0.0f, -1.0f, -1.0f);
 
-glm::vec3 lightPosition01(-10.0f, -0.2f, -5.0f);
+glm::vec3 lightPosition01(400.0f, 0.0f, -510.0f);
 glm::vec3 lightPosition02(8.0f, 0.0f, 0.0f);
 float myTime = 0.0f;
 glm::vec3 colorDeLaLuz = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -175,9 +184,9 @@ pandBalanceoZInc = 0.0f,
 pandShakeInc = 0.0f;
 
 //Keyframes (Manipulación y dibujo)
-float	posX = 0.0f,
+float	posX = 250.0f,
 		posY = 2.0f,
-		posZ = 0.0f,
+		posZ = 360.0f,
 		anim1X = 122.0f,
 		anim1Y = -20.0f,
 		anim1Z = -170.0f,
@@ -203,7 +212,36 @@ float anguloCaminata = 0.0f;
 float velocidadCaminata = 2.0f;
 float direccionCaminata = 1.0f;
 
+// =====================================================
+// CATRINA ARTICULADA: BAILE Y CONTROLES (práctica 6)
+// =====================================================
+// Todas las variables llevan prefijo "cat" para no chocar con las de Aquaman (posX, giroMonito, ...)
+const std::string RUTA_CATRINA = "resources/objects/ModelosGustavo/catrina/";	// <-- carpeta con brazoDer, brazoIzq, cabeza y cuerpoCalaca (.obj)
+glm::vec3 catBase(0.0f, 0.0f, -40.0f);	// Posición base en el mundo (frente al punto de partida)
+float catEscala = 1.0f;
 
+float	catPosX = 0.0f,
+catPosY = 0.0f,
+catPosZ = 0.0f,
+catGiro = 0.0f,
+catRotCabeza = 0.0f,
+catRotBrazoDer = 0.0f,
+catRotBrazoIzq = 0.0f;
+
+bool	catBaile = true;		// El baile inicia activo (Espacio lo pausa, solo en modo catrina)
+float	catTiempo = 0.0f;		// Acumulador de tiempo continuo del baile
+
+// Puntos de pivote (se calculan automáticamente al cargar los .obj en main)
+glm::vec3 catPivCabeza(0.0f, 0.0f, 0.0f);
+glm::vec3 catPivBrazoDer(0.0f, 0.0f, 0.0f);
+glm::vec3 catPivBrazoIzq(0.0f, 0.0f, 0.0f);
+float catEscalaMarcador = 0.05f;
+float catPasoPivote = 0.02f;
+bool catMostrarPivotes = true;	// Tecla M (en modo catrina) para ocultar/mostrar cubos guía
+
+// Modo catrina (tecla C): mientras está activo, las teclas de abajo controlan a la catrina
+// y se desactivan temporalmente las teclas globales que chocan (M, N, T, U, J, I, V, Espacio, P, L).
+bool modoCatrina = false;
 
 //Para las animaciones
 
@@ -224,6 +262,22 @@ float	incX = 0.0f,
 		giroFantasmaInc = 0.0f;
 
 bool perspect = false;
+
+
+// Animación de sillas
+const int TOTAL_SILLAS = 10;
+
+int sillasColocadas = 0;
+int sillasQuitadas = 0;
+
+float tiempoSilla = 0.0f;
+float intervaloSilla = 0.5f;
+
+// Estados de la animación
+bool colocandoSillas = false;
+bool quitandoSillas = false;
+bool hileraCompleta = false;
+
 
 #define MAX_FRAMES 18
 int i_max_steps = 60;
@@ -376,13 +430,13 @@ unsigned int generateTextures(const char* filename, bool alfa, bool isPrimitive)
 void animate(void) 
 {
 
-	lightPosition01.x = 200.0f * cos(myTime);
+	/*lightPosition01.x = 200.0f * cos(myTime);
 	lightPosition01.z = 200.0f * sin(myTime);
 	myTime += 0.005f;
 
 	lightPosition02.x = 200.0f * cos(myTime);
 	lightPosition02.z = 200.0f * sin(myTime);
-	myTime += 0.005f;
+	myTime += 0.005f;*/
 
 	contador++;
 	if (contador >= 60)
@@ -538,6 +592,46 @@ void moverCamaraCenital(GLFWwindow* window)
 		centroCenital.x -= paso;
 }
 
+// Dibuja las franjas negras cinemáticas (superior e inferior) en pantalla 2D
+void dibujarBarrasCinematicas(Shader& shader2D)
+{
+	float objetivo = modoCinematico ? 0.13f : 0.0f;
+	alturaBarraCinematica += (objetivo - alturaBarraCinematica) * 0.15f;
+
+	if (alturaBarraCinematica <= 0.001f)
+	{
+		alturaBarraCinematica = 0.0f;
+		return;
+	}
+
+	glDisable(GL_DEPTH_TEST);
+
+	shader2D.use();
+	shader2D.setMat4("projection", glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f));
+	shader2D.setMat4("view", glm::mat4(1.0f));
+	shader2D.setVec3("aColor", 0.0f, 0.0f, 0.0f);
+
+	glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, t_white);
+	glBindVertexArray(VAO[0]);
+
+	// Franja negra inferior
+	glm::mat4 barraInf = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, alturaBarraCinematica * 0.5f, 0.0f));
+	barraInf = glm::scale(barraInf, glm::vec3(1.0f, alturaBarraCinematica, 1.0f));
+	shader2D.setMat4("model", barraInf);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	// Franja negra superior
+	glm::mat4 barraSup = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 1.0f - (alturaBarraCinematica * 0.5f), 0.0f));
+	barraSup = glm::scale(barraSup, glm::vec3(1.0f, alturaBarraCinematica, 1.0f));
+	shader2D.setMat4("model", barraSup);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	glBindVertexArray(0);
+	glEnable(GL_DEPTH_TEST);
+}
+
+
 void getResolution() {
 	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	SCR_WIDTH = mode->width;
@@ -653,8 +747,8 @@ void myData() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCubo), verticesCubo, GL_STATIC_DRAW);
 
-	/*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	// position attribute
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
@@ -690,26 +784,42 @@ bool comprobarArchivo(const std::string& ruta)
 void animations() {
 
 	static int paso = 0;
-	float velocidad = 0.9f;
+	float velocidad = 1.1f;
 
 
 	switch (paso) {
 	case 0:
 		giroFantasma2 = 90;
 		anim2Z -= velocidad;
+
+		lightPosition01.x = lightPosition01.x + (20.0f * cos(myTime));
+		lightPosition01.z = lightPosition01.z + (20.0f * sin(myTime));
+		myTime += 0.3f;
+
 		if (anim2Z <= 150) paso++;
+			
 		break;
 
 	case 1:
 		giroFantasma2 = 0;
 		anim2X += velocidad;
+
+		if (lightPosition01.x >= 300)
+			lightPosition01.x = lightPosition01.x - 1;
+
 		if (anim2X >= 190) paso++;
+			
 		break;
 
 	case 2:
 		velocidad = 2.5;
 		giroFantasma2 = 90;
 		anim2Z -= velocidad;
+
+		if (lightPosition01.x <= 400 )
+			lightPosition01.x = lightPosition01.x + 1;
+		
+
 		if (anim2Z <= -300) paso++;
 		break;
 
@@ -717,6 +827,11 @@ void animations() {
 		velocidad = 2.5;
 		giroFantasma2 = 180;
 		anim2X -= velocidad;
+
+		lightPosition01.x = lightPosition01.x + (20.0f * cos(myTime));
+		lightPosition01.z = lightPosition01.z + (20.0f * sin(myTime));
+		myTime += 0.3f;
+
 		if (anim2X <= -190) paso++;
 		break;
 
@@ -724,29 +839,100 @@ void animations() {
 		velocidad = 2.5;
 		giroFantasma2 = 270;
 		anim2Z += velocidad;
+
+		if (lightPosition01.x <= 500)
+			lightPosition01.x = lightPosition01.x + 1;
+
 		if (anim2Z >= 150) paso++;
+			
 		break;
 
 	case 5:
 		velocidad = 0.9;
 		giroFantasma2 = 0;
 		anim2X += velocidad;
+
+		if (lightPosition01.x >= 400)
+			lightPosition01.x = lightPosition01.x - 1;
+
 		if (anim2X >= -30) paso++;
 		break;
 
 	case 6:
 		giroFantasma2 = -90;
 		anim2Z += velocidad;
+
+		lightPosition01.x = lightPosition01.x + (20.0f * cos(myTime));
+		lightPosition01.z = lightPosition01.z + (20.0f * sin(myTime));
+		myTime += 0.3f;
+
 		if (anim2Z >= 300) paso++;
 		break;
 
 	case 7:
 		giroFantasma2 = 0;
 		anim2X += velocidad;
+
+		lightPosition01.x = lightPosition01.x + (20.0f * cos(myTime));
+		lightPosition01.z = lightPosition01.z + (20.0f * sin(myTime));
+		myTime += 0.3f;
+
 		if (anim2X >= 20) paso = 0;
 		break;
 	}
 
+}
+
+void animarSillas()
+{
+	tiempoSilla += (float)deltaTime;
+
+	// COLOCAR SILLAS
+	if (colocandoSillas)
+	{
+		if (tiempoSilla >= intervaloSilla)
+		{
+			tiempoSilla = 0.0f;
+
+			if (sillasColocadas < TOTAL_SILLAS)
+			{
+				sillasColocadas++;
+			}
+
+			if (sillasColocadas >= TOTAL_SILLAS)
+			{
+				colocandoSillas = false;
+				hileraCompleta = true;
+
+				std::cout << "Hilera completa" << std::endl;
+			}
+		}
+	}
+
+	// QUITAR SILLAS
+	if (quitandoSillas)
+	{
+		if (tiempoSilla >= intervaloSilla)
+		{
+			tiempoSilla = 0.0f;
+
+			if (sillasQuitadas < sillasColocadas)
+			{
+				sillasQuitadas++;
+			}
+
+			if (sillasQuitadas >= sillasColocadas)
+			{
+				quitandoSillas = false;
+				hileraCompleta = false;
+
+				sillasColocadas = 0;
+				sillasQuitadas = 0;
+
+				std::cout << "Todas las sillas fueron retiradas" << std::endl;
+			}
+		}
+	}
 }
 
 
@@ -800,6 +986,8 @@ void visuales() {
 		verModel = false;
 	}
 }
+
+
 
 int main() {
 	// Inicializar GLFW
@@ -862,6 +1050,7 @@ int main() {
 	//Mis funciones
 	//Datos a utilizar
 	//LoadTextures();
+	//
 	myData();
 	glEnable(GL_DEPTH_TEST);
 
@@ -876,12 +1065,12 @@ int main() {
 	
 	
 	vector<std::string> faces{
-		"resources/skybox/right.jpg",
-		"resources/skybox/left.jpg",
-		"resources/skybox/top.jpg",
-		"resources/skybox/bottom.jpg",
-		"resources/skybox/front.jpg",
-		"resources/skybox/back.jpg"
+		"resources/skybox/galaxy+X.tga", // 0: Right  (+X)
+		"resources/skybox/galaxy-X.tga", // 1: Left   (-X)
+		"resources/skybox/galaxy+Y.tga", // 2: Top    (+Y)
+		"resources/skybox/galaxy-Y.tga", // 3: Bottom (-Y)
+		"resources/skybox/galaxy+Z.tga", // 4: Front  (+Z)
+		"resources/skybox/galaxy-Z.tga"  // 5: Back   (-Z)
 	};
 
 
@@ -895,12 +1084,23 @@ int main() {
 	// load models
 	// -----------
 
-
+	// Catrina articulada (4 piezas) para el baile de la práctica 6
+	Model CatrinaCuerpo(RUTA_CATRINA + "cuerpoCalaca.obj");
+	comprobarArchivo(RUTA_CATRINA + "cuerpoCalaca.obj");
+	Model CatrinaCabeza(RUTA_CATRINA + "cabeza.obj");
+	comprobarArchivo(RUTA_CATRINA + "cabeza.obj");
+	Model CatrinaBrazoDer(RUTA_CATRINA + "brazoDer.obj");
+	comprobarArchivo(RUTA_CATRINA + "brazoDer.obj");
+	Model CatrinaBrazoIzq(RUTA_CATRINA + "brazoIzq.obj");
+	comprobarArchivo(RUTA_CATRINA + "brazoIzq.obj");
 
 	Model piso("resources/objects/ModelosGustavo/Piso3.obj");
 	comprobarArchivo("resources/objects/ModelosGustavo/Piso3.obj");
 	Model cesped("resources/objects/ModelosGustavo/cesped/cesped.obj");
 	comprobarArchivo("resources/objects/ModelosGustavo/cesped/cesped.obj");
+
+	Model escenario("resources/objects/ModelosHanny/escenario/escenario.obj");
+	comprobarArchivo("resources/objects/ModelosHanny/escenario/escenario.obj");
 
 	Model CaraGuitarra("resources/objects/ModelosHanny/calacaGuitarra/cabeza.obj");
 	comprobarArchivo("resources/objects/ModelosHanny/calacaGuitarra/cabeza.obj");
@@ -920,6 +1120,68 @@ int main() {
 	Model BrazoArribaPandero("resources/objects/ModelosHanny/calacaPandero/brazoIzq.obj");
 	Model Pandero("resources/objects/ModelosHanny/calacaPandero/pandero.obj");
 
+	Model arbolote("resources/objects/ModelosCarlos/arbol_verde_grande/arbol_grande.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/arbol_verde_grande/arbol_grande.obj");
+
+	Model arbolito("resources/objects/ModelosCarlos/arbol_verde_simple/arbolito.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/arbol_verde_simple/arbolito.obj");
+
+	Model fantasmaSombrero("resources/objects/ModelosCarlos/fantasma_sombrero/fantasma_sombrero.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/fantasma_sombrero/fantasma_sombrero.obj");
+
+	Model tumbaPiso("resources/objects/ModelosCarlos/tumba1/tumba.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/tumba1/tumba.obj");
+
+	Model tumbaDePie("resources/objects/ModelosCarlos/tumba2/tumba2.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/tumba2/tumba2.obj");
+
+	Model cripta("resources/objects/ModelosCarlos/cementerio/cripta.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/cementerio/cripta.obj");
+
+	Model kiosco("resources/objects/ModelosCarlos/Kiosco/Kiosco.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/Kiosco/Kiosco.obj");
+
+	Model capillaCementerio("resources/objects/ModelosCarlos/capilla_cementerio/capilla.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/capilla_cementerio/capilla.obj");
+
+	Model esqueleto("resources/objects/ModelosCarlos/esqueleto3/esqueletote.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/esqueleto3/esqueletote.obj");
+
+	Model calaveraAzucar("resources/objects/ModelosCarlos/calaverita/calaverita.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/calaverita/calaverita.obj");
+
+	Model arbol("resources/objects/ModelosCarlos/arbol_verde1/arbol_verde.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/arbol_verde1/arbol_verde.obj");
+
+	Model arboles("resources/objects/ModelosCarlos/arbol/arbol.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/arbol/arbol.obj");
+
+	Model banca("resources/objects/ModelosCarlos/banca/banca.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/banca/banca.obj");
+
+	Model bancaPicnic("resources/objects/ModelosCarlos/banca_picnic/banca_picnic.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/banca_picnic/banca_picnic.obj");
+
+	Model iglesia("resources/objects/ModelosCarlos/iglesia/iglesia.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/iglesia/iglesia.obj");
+
+	Model sillas("resources/objects/ModelosCarlos/sillas1/silla_corona.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/sillas1/silla_corona.obj");
+
+	Model sillas2("resources/objects/ModelosCarlos/sillas1/sillas_corona.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/sillas1/sillas_corona.obj");
+
+	Model casa_med("resources/objects/ModelosCarlos/casa_med/casa.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/casa_med/casa.obj");
+
+	Model ofrenda2("resources/objects/ModelosCarlos/ofrenda2/ofrenda2_1.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/ofrenda2/ofrenda2_1.obj");
+
+	Model ofrenda3("resources/objects/ModelosCarlos/ofrenda3/ofrenda3.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/ofrenda3/ofrenda3.obj");
+
+	//Model ofrenda1("resources/objects/ModelosCarlos/ofrenda1/ofrenda1_1.obj");
+	//comprobarArchivo("resources/objects/ModelosCarlos/ofrenda1/ofrenda1_1.obj");
 
 	Model CabezaAquaman("resources/objects/Aquaman/Cabeza.obj");
 	Model CuerpoAquaman("resources/objects/Aquaman/Cuerpo.obj");
@@ -944,9 +1206,12 @@ int main() {
 	comprobarArchivo("resources/objects/ModelosCarlos/mujer_fantasma/mujer_fantasma.obj");
 	Model SinCabeza("resources/objects/ModelosCarlos/sin_cabeza/sin_cabeza.obj");
 	comprobarArchivo("resources/objects/ModelosCarlos/sin_cabeza/sin_cabeza.obj");
-	Model Mujer("resources/objects/ModelosCarlos/woman/woman.obj");
-	comprobarArchivo("resources/objects/ModelosCarlos/woman/woman.obj");
+	
+	Model alebrije("resources/objects/ModelosCarlos/alebrije2/alebrije2.obj");
+	comprobarArchivo("resources/objects/ModelosCarlos/alebrije2/alebrije2.obj");
 	//catrin.initShaders(animShader.ID);
+
+
 
 
 	ModelAnim animacionPersonaje("resources/objects/Personaje1/Arm.dae");
@@ -1106,11 +1371,11 @@ int main() {
 	KeyFrame[9].pandGiroY = -22.0f; KeyFrame[9].pandInclinaX = -6.0f; KeyFrame[9].pandBalanceoZ = -12.0f; KeyFrame[9].pandShake = -0.10f;
 
 	// Frame 10: Remate final en alto
-	//KeyFrame[10].guitPosX = -18.0f; KeyFrame[10].guitPosY = 27.5f; KeyFrame[10].guitPosZ = 0.0f;
-	//KeyFrame[10].guitGiroY = 0.0f; KeyFrame[10].guitInclinaX = -12.0f; KeyFrame[10].guitBalanceoZ = 0.0f;
+	KeyFrame[10].guitPosX = -18.0f; KeyFrame[10].guitPosY = 27.5f; KeyFrame[10].guitPosZ = 0.0f;
+	KeyFrame[10].guitGiroY = 0.0f; KeyFrame[10].guitInclinaX = -12.0f; KeyFrame[10].guitBalanceoZ = 0.0f;
 
-	//KeyFrame[10].pandPosX = 18.0f; KeyFrame[10].pandPosY = 27.5f; KeyFrame[10].pandPosZ = 0.0f;
-	//KeyFrame[10].pandGiroY = 0.0f; KeyFrame[10].pandInclinaX = -12.0f; KeyFrame[10].pandBalanceoZ = 0.0f; KeyFrame[10].pandShake = 0.22f;
+	KeyFrame[10].pandPosX = 18.0f; KeyFrame[10].pandPosY = 27.5f; KeyFrame[10].pandPosZ = 0.0f;
+	KeyFrame[10].pandGiroY = 0.0f; KeyFrame[10].pandInclinaX = -12.0f; KeyFrame[10].pandBalanceoZ = 0.0f; KeyFrame[10].pandShake = 0.22f;
 
 	// Frame 11: Regreso exacto al Frame 0 para loop continuo
 	//KeyFrame[11] = KeyFrame[0];
@@ -1136,6 +1401,8 @@ int main() {
 		animate();
 		animations();
 		visuales();
+		animarSillas();
+		//animarCatrina();
 
 		// render
 		// ------
@@ -1256,31 +1523,255 @@ int main() {
 		glm::mat4 refPiso = glm::mat4(1.0f);
 		glm::mat4 refCementerio = glm::mat4(1.0f);
 		glm::mat4 refHacienda = glm::mat4(1.0f);
+		glm::mat4 refCesped = glm::mat4(1.0f);
+		glm::mat4 refArboles = glm::mat4(1.0f);
+		glm::mat4 refSillas = glm::mat4(1.0f);
+		glm::mat4 refSillas2 = glm::mat4(1.0f);
+
+		float flotacion = sin(glfwGetTime() * 2.0f) * 1.3f;
+
+		lightPosition01.y = flotacion;
 
 		refPiso = modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(250.0f, 0.0f, -10.0f));
 		modelOp = glm::scale(modelOp, glm::vec3(0.25f,0.2f, 0.35f));
 		staticShader.setMat4("model", modelOp);
 		piso.Draw(staticShader);
 
-		refHacienda = modelOp = glm::translate(refPiso, glm::vec3(0.0f, -10.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(4.0f, 3.4f, 4.0f));
+		modelOp = glm::translate(refPiso, glm::vec3(0.0f, 0.0f, 620.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(1.0f, 1.0f, 1.0f));
 		staticShader.setMat4("model", modelOp);
-		Hacienda.Draw(staticShader);
+		kiosco.Draw(staticShader);
 
-		modelOp = glm::translate(refHacienda, glm::vec3(150.0f, 10.5f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(6.0f, 2.0f, 3.0f));
+		refCesped = modelOp = glm::translate(refPiso, glm::vec3(600.0f, 0.8f, 620.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(6.3f, 3.0f, 3.3f));
 		staticShader.setMat4("model", modelOp);
 		cesped.Draw(staticShader);
 
-		refCementerio = modelOp = glm::translate(refPiso, glm::vec3(0.0f, -2.0f, -500.0f));
+		refArboles = glm::translate(refCesped, glm::vec3(-280.0f, 0.0f, -190.0f));
+
+		for (int x = 0; x < 260; x += 50)
+		{
+			for (int z = 0; z < 420; z += 50)
+			{
+				// Alternar posiciones
+				if ((x / 60 + z / 60) % 2 == 0)
+				{
+					modelOp = glm::translate(refArboles,glm::vec3((float)x, 0.0f, (float)z));
+
+					modelOp = glm::scale(modelOp, glm::vec3(0.5f,0.5f,0.5f));
+
+					staticShader.setMat4("model", modelOp);
+					arbolote.Draw(staticShader);
+				}
+			}
+		}
+
+		modelOp = glm::translate(refCesped, glm::vec3(-290.0f, 0.0f, 120.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.66f, 0.66f, 0.66f));
+		staticShader.setMat4("model", modelOp);
+		bancaPicnic.Draw(staticShader);
+
+		refCesped = modelOp = glm::translate(refPiso, glm::vec3(-290.0f, 0.8f, 620.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(6.3f, 3.0f, 3.3f));
+		staticShader.setMat4("model", modelOp);
+		cesped.Draw(staticShader);
+
+		refArboles = glm::translate(refCesped, glm::vec3(-280.0f, 0.0f, -190.0f));
+
+		for (int x = 0; x < 260; x += 50)
+		{
+			for (int z = 0; z < 420; z += 50)
+			{
+				// Alternar posiciones
+				if ((x / 60 + z / 60) % 2 == 0)
+				{
+					modelOp = glm::translate(refArboles,glm::vec3((float)x, 0.0f, (float)z));
+
+					modelOp = glm::scale(modelOp, glm::vec3(0.5f, 0.5f, 0.5f));
+
+					staticShader.setMat4("model", modelOp);
+					arbolote.Draw(staticShader);
+				}
+			}
+		}
+
+		modelOp = glm::translate(refCesped, glm::vec3(10.0f, 0.0f, -50.0f));
 		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(1.8f,1.2f,1.5f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.49f,0.34f,0.34f));
+		staticShader.setMat4("model", modelOp);
+		banca.Draw(staticShader);
+
+		modelOp = glm::translate(refCesped, glm::vec3(10.0f, 0.0f, -120.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.49f, 0.34f, 0.34f));
+		staticShader.setMat4("model", modelOp);
+		banca.Draw(staticShader);
+
+		modelOp = glm::translate(refPiso, glm::vec3(-250.0f, 0.8f, 700.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.65f, 0.65f, 0.65f));
+		staticShader.setMat4("model", modelOp);
+		casa_med.Draw(staticShader);
+
+		modelOp = glm::translate(refPiso, glm::vec3(250.0f, 0.8f, 550.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.65f, 0.65f, 0.65f));
+		staticShader.setMat4("model", modelOp);
+		casa_med.Draw(staticShader);
+
+		modelOp = glm::translate(refPiso, glm::vec3(250.0f, 0.8f, 450.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.49f, 0.34f, 0.34f));
+		staticShader.setMat4("model", modelOp);
+		banca.Draw(staticShader);
+
+		modelOp = glm::translate(refPiso, glm::vec3(250.0f, 0.8f, 650.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.49f, 0.34f, 0.34f));
+		staticShader.setMat4("model", modelOp);
+		banca.Draw(staticShader);
+
+		refCesped = modelOp = glm::translate(refPiso, glm::vec3(550.0f, 0.9f, -250.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(10.0f, 1.0f, 0.6f));
+		//modelOp = glm::scale(modelOp, glm::vec3(2.1f, 3.0f, 4.4f));
+		staticShader.setMat4("model", modelOp);
+		cesped.Draw(staticShader);
+
+		for (int z = 10; z < 500; z += 40)
+		{
+			modelOp = glm::translate(refCesped, glm::vec3(0.0f, 0.7f, (float)z));
+			modelOp = glm::scale(modelOp, glm::vec3(1.7f, 1.7f, 1.7f));
+			staticShader.setMat4("model", modelOp);
+			arbolito.Draw(staticShader);
+		}
+
+		refCesped = modelOp = glm::translate(refPiso, glm::vec3(-550.0f, 0.9f, -250.0f));
+		//modelOp = glm::scale(modelOp, glm::vec3(2.1f, 3.0f, 4.4f));
+		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(10.0f, 1.0f, 0.6f));
+		staticShader.setMat4("model", modelOp);
+		cesped.Draw(staticShader);
+
+		for (int z = 10; z < 500; z += 40)
+		{
+			modelOp = glm::translate(refCesped, glm::vec3(0.0f, 0.7f, (float)z));
+			modelOp = glm::scale(modelOp, glm::vec3(1.7f, 1.7f, 1.7f));
+			staticShader.setMat4("model", modelOp);
+			arbolito.Draw(staticShader);
+		}
+
+		modelOp = glm::translate(refPiso, glm::vec3(110.0f, 0.0f, 110.0f));
+		staticShader.setMat4("model", modelOp);
+		arbol.Draw(staticShader);
+
+		modelOp = glm::translate(refPiso, glm::vec3(-110.0f, 0.0f, 110.0f));
+		staticShader.setMat4("model", modelOp);
+		arbol.Draw(staticShader);
+
+		modelOp = glm::translate(refPiso, glm::vec3(110.0f, 0.0f, -110.0f));
+		staticShader.setMat4("model", modelOp);
+		arbol.Draw(staticShader);
+
+		modelOp = glm::translate(refPiso, glm::vec3(-110.0f, 0.0f, -110.0f));
+		staticShader.setMat4("model", modelOp);
+		arbol.Draw(staticShader);
+
+		modelOp = glm::translate(refPiso, glm::vec3(100.0f, 1.0f, 180.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(4.0f));
+		staticShader.setMat4("model", modelOp);
+		calaveraAzucar.Draw(staticShader);
+
+		modelOp = glm::translate(refPiso, glm::vec3(-100.0f, 2.0f, 180.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(4.0f));
+		staticShader.setMat4("model", modelOp);
+		calaveraAzucar.Draw(staticShader);
+
+		refHacienda = modelOp = glm::translate(refPiso, glm::vec3(0.0f, -9.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(4.0f, 4.0f, 4.0f));
+		staticShader.setMat4("model", modelOp);
+		Hacienda.Draw(staticShader);
+
+		//Esqueletote
+		modelOp = glm::translate(refPiso, glm::vec3(310.0f, 0.0f, 0.0f));
+		//modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(3.0f));
+		staticShader.setMat4("model", modelOp);
+		esqueleto.Draw(staticShader);
+
+		//--------------------------------
+		//OFRENDAS
+		//--------------------------------
+		modelOp = glm::translate(refPiso, glm::vec3(470.0f, 0.0f, 300.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(-110.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(1.25f));
+		staticShader.setMat4("model", modelOp);
+		ofrenda2.Draw(staticShader);
+
+		modelOp = glm::translate(refPiso, glm::vec3(460.0f, 0.0f, 150.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(1.0f));
+		staticShader.setMat4("model", modelOp);
+		ofrenda3.Draw(staticShader);
+
+		//-------------------------------------------------
+
+		modelOp = glm::translate(refPiso, glm::vec3(160.0f, 0.8f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(6.5f, 3.0f, 3.3f));
+		staticShader.setMat4("model", modelOp);
+		cesped.Draw(staticShader);
+
+		refCementerio = modelOp = glm::translate(refPiso, glm::vec3(150.0f, -2.0f, -500.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(1.8f,1.8f,1.5f));
 		staticShader.setMat4("model", modelOp);
 		Cementerio.Draw(staticShader);
 
+		modelOp = glm::translate(glm::mat4(1.0f), lightPosition01);
+		//modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.5f));
+		staticShader.setMat4("model", modelOp);
+		fantasmaSombrero.Draw(staticShader);
+
+		refCesped = modelOp = glm::translate(refPiso, glm::vec3(580.0f, 0.8f, -550.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(4.2f, 3.0f, 2.1f));
+		staticShader.setMat4("model", modelOp);
+		cesped.Draw(staticShader);
+
+		modelOp = glm::translate(refCesped, glm::vec3(-100.0f, 0.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
+		arbol.Draw(staticShader);
+
+		modelOp = glm::translate(refCesped, glm::vec3(-150.0f, 0.0f, 50.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.4f, 0.4f, 0.4f));
+		modelOp = glm::rotate(modelOp, glm::radians(-45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
+		tumbaDePie.Draw(staticShader);
+
+		modelOp = glm::translate(refPiso, glm::vec3(-230.0f, -1.0f, -500.0f));
+		//modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(8.0f));
+		staticShader.setMat4("model", modelOp);
+		iglesia.Draw(staticShader);
+
+		refCesped = modelOp = glm::translate(refPiso, glm::vec3(-580.0f, 0.8f, -550.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(4.2f, 3.0f, 2.1f));
+		staticShader.setMat4("model", modelOp);
+		cesped.Draw(staticShader);
+
+		modelOp = glm::translate(refCesped, glm::vec3(100.0f, 0.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
+		arbol.Draw(staticShader);
+
+		modelOp = glm::translate(refCesped, glm::vec3(150.0f, 0.0f, 50.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.66f, 0.66f, 0.66f));
+		staticShader.setMat4("model", modelOp);
+		bancaPicnic.Draw(staticShader);
+
 		modelOp = glm::translate(refCementerio, glm::vec3(0.0f, 0.0f, -40.0f));
 		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.4f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.8f));
 		staticShader.setMat4("model", modelOp);
 		catrina.Draw(staticShader);
 
@@ -1296,6 +1787,41 @@ int main() {
 		//glDisable(GL_BLEND);
 		// Desactiva la mezcla de colores para evitar que los siguientes objetos dibujados hereden el efecto de transparencia.
 
+		modelOp = glm::translate(refCementerio, glm::vec3(-134, -5.0f, -170.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(1.0f));
+		//modelOp = glm::rotate(modelOp, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
+		capillaCementerio.Draw(staticShader);
+
+		modelOp = glm::translate(refCementerio, glm::vec3(-130, 0.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.6f));
+		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
+		tumbaPiso.Draw(staticShader);
+
+		modelOp = glm::translate(refCementerio, glm::vec3(-140, -1.0f, 100.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.8f));
+		modelOp = glm::rotate(modelOp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
+		cripta.Draw(staticShader);
+
+		modelOp = glm::translate(refCementerio, glm::vec3(130, -1.0f, 100.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.8f));
+		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
+		cripta.Draw(staticShader);
+
+		modelOp = glm::translate(refCementerio, glm::vec3(130, 0.0f, 10.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.6f));
+		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
+		tumbaPiso.Draw(staticShader);
+
+		modelOp = glm::translate(refCementerio, glm::vec3(130, 0.0f, -20.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.6f));
+		modelOp = glm::rotate(modelOp, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
+		tumbaPiso.Draw(staticShader);
 
 		float tumbas=-120;
 
@@ -1309,18 +1835,18 @@ int main() {
 		}
 
 		//Hombre sin cabeza
-		modelOp = glm::translate(refCementerio, glm::vec3(anim2X, 1.0f, anim2Z));
+		modelOp = glm::translate(refCementerio, glm::vec3(anim2X, 1.5f, anim2Z));
 		modelOp = glm::rotate(modelOp, glm::radians(giroFantasma2), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.3f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.48f));
 		staticShader.setMat4("model", modelOp);
 		SinCabeza.Draw(staticShader);
 
 		//Mujer
-		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(5.0f, anim3Y, 5.0f));
-		modelOp = glm::rotate(modelOp, glm::radians(giroFantasma3), glm::vec3(0.0f, 1.0f, 0.0f));
-		modelOp = glm::scale(modelOp, glm::vec3(0.2f));
-		staticShader.setMat4("model", modelOp);
-		Mujer.Draw(staticShader);
+		//modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(5.0f, anim3Y, 5.0f));
+		//modelOp = glm::rotate(modelOp, glm::radians(giroFantasma3), glm::vec3(0.0f, 1.0f, 0.0f));
+		//modelOp = glm::scale(modelOp, glm::vec3(0.2f));
+		//staticShader.setMat4("model", modelOp);
+		//Mujer.Draw(staticShader);
 
 
 
@@ -1332,8 +1858,8 @@ int main() {
 		glm::mat4 refCuerpoAquaman = glm::mat4(1.0f);
 
 		refCuerpoAquaman = modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(posX, posY, posZ));
-		refCuerpoAquaman = modelOp = glm::rotate(modelOp, glm::radians(giroMonito), glm::vec3(0.0f, 1.0f, 0.0f));
-		refCuerpoAquaman = modelOp = glm::scale(modelOp, glm::vec3(0.8f));
+		refCuerpoAquaman = modelOp = glm::rotate(modelOp, glm::radians(giroMonito), glm::vec3(0.0f, 2.0f, 0.0f));
+		refCuerpoAquaman = modelOp = glm::scale(modelOp, glm::vec3(2.6f));
 		staticShader.setMat4("model", modelOp);
 		CuerpoAquaman.Draw(staticShader);
 
@@ -1377,6 +1903,60 @@ int main() {
 		staticShader.setMat4("model", modelOp);
 		BotaIzqAquaman.Draw(staticShader);
 		
+		//Alebrije
+
+		
+
+		modelOp = glm::translate(refCuerpoAquaman, glm::vec3(-6.0f, flotacion, 6.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.09f));
+		modelOp = glm::rotate(modelOp, glm::radians(-30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		staticShader.setMat4("model", modelOp);
+		alebrije.Draw(staticShader);
+
+		//----------------------------------------------------------------------------
+		//DIBUJAR ESCENARIO CALACAS
+		//---------------------------------------------------------------------------
+		//modelOp = glm::translate(refCuerpoAquaman, glm::vec3(0.5f, -0.9f, 0.0f));
+		modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 35.0f, 0.0f));
+		//modelOp = glm::rotate(modelOp, glm::radians(rotPiernaIzq), glm::vec3(1.0f, 0.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(55.0f,40.0f,60.0f));
+		staticShader.setMat4("model", modelOp);
+		staticShader.setMat4("model", modelOp);
+		escenario.Draw(staticShader);
+
+		refSillas = modelOp = glm::translate(glm::mat4(1.0f), glm::vec3(-60.0f, 0.0f, 80.0f));
+		
+
+		for (int x = 0; x < 150; x += 15)
+		{
+			for (int z = 0; z < 150; z += 15)
+			{
+				modelOp = glm::translate(refSillas, glm::vec3((float)x, 0.0f, (float)z));
+				modelOp = glm::rotate(modelOp, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+				modelOp = glm::scale(modelOp, glm::vec3(0.27f));
+				staticShader.setMat4("model", modelOp);
+				sillas.Draw(staticShader);
+			}
+		}
+
+		refSillas2 = modelOp = glm::translate(refSillas, glm::vec3(-20.0f, 0.0f, 180.0f));
+		modelOp = glm::rotate(modelOp, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOp = glm::scale(modelOp, glm::vec3(0.27f));
+		staticShader.setMat4("model", modelOp);
+		sillas2.Draw(staticShader);
+
+		for (int i = 0; i < sillasColocadas; i++)
+		{
+			// Las sillas retiradas ya no se dibujan
+			if (i < sillasQuitadas)
+				continue;
+
+			modelOp = glm::translate(refSillas2, glm::vec3(10 + (i * 15.0f), 0.0f, 0.0f));
+			modelOp = glm::rotate(modelOp, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			modelOp = glm::scale(modelOp, glm::vec3(0.27f));
+			staticShader.setMat4("model", modelOp);
+			sillas.Draw(staticShader);
+		}
 		
 		//-------------------------------------------------------------------------
 		// DIBUJAR CALACAS
@@ -1403,10 +1983,7 @@ int main() {
 			glm::radians(guitBalanceoZ),
 			glm::vec3(0.0f, 0.0f, 1.0f)
 		);
-		refCuerpoCalacaGuitarra = glm::scale(
-			refCuerpoCalacaGuitarra,
-			glm::vec3(8.0f)
-		);
+		refCuerpoCalacaGuitarra = glm::scale(refCuerpoCalacaGuitarra,glm::vec3(8.0f));
 
 		staticShader.setMat4("model", refCuerpoCalacaGuitarra);
 		CuerpoGuitarra.Draw(staticShader);
@@ -1466,6 +2043,59 @@ int main() {
 		BrazoArribaPandero.Draw(staticShader);
 		Pandero.Draw(staticShader);
 
+
+		// =====================================================
+		// CATRINA ARTICULADA (baile de la práctica 6)
+		// =====================================================
+		// 1. Torso (matriz padre)
+		/*glm::mat4 modelCuerpoCatrina = glm::translate(refCementerio, glm::vec3(0.0f, 0.0f, -40.0f));
+		modelCuerpoCatrina = glm::rotate(modelCuerpoCatrina, glm::radians(catGiro), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelCuerpoCatrina = glm::scale(modelCuerpoCatrina, glm::vec3(catEscala));
+		staticShader.setMat4("model", modelCuerpoCatrina);
+		CatrinaCuerpo.Draw(staticShader);
+
+		glm::mat4 modelTempCatrina = glm::mat4(1.0f);
+
+		// 2. Cabeza (gira en eje Y sobre el cuello)
+		modelTempCatrina = modelCuerpoCatrina;
+		modelTempCatrina = glm::translate(modelTempCatrina, catPivCabeza);
+		modelTempCatrina = glm::rotate(modelTempCatrina, glm::radians(catRotCabeza), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelTempCatrina = glm::translate(modelTempCatrina, -catPivCabeza);
+		staticShader.setMat4("model", modelTempCatrina);
+		CatrinaCabeza.Draw(staticShader);
+
+		// 3. Brazo derecho (gira en eje Z)
+		modelTempCatrina = modelCuerpoCatrina;
+		modelTempCatrina = glm::translate(modelTempCatrina, catPivBrazoDer);
+		modelTempCatrina = glm::rotate(modelTempCatrina, glm::radians(catRotBrazoDer), glm::vec3(0.0f, 0.0f, 1.0f));
+		modelTempCatrina = glm::translate(modelTempCatrina, -catPivBrazoDer);
+		staticShader.setMat4("model", modelTempCatrina);
+		CatrinaBrazoDer.Draw(staticShader);
+
+		// 4. Brazo izquierdo (gira en eje Z en sentido opuesto para simetría)
+		modelTempCatrina = modelCuerpoCatrina;
+		modelTempCatrina = glm::translate(modelTempCatrina, catPivBrazoIzq);
+		modelTempCatrina = glm::rotate(modelTempCatrina, glm::radians(-catRotBrazoIzq), glm::vec3(0.0f, 0.0f, 1.0f));
+		modelTempCatrina = glm::translate(modelTempCatrina, -catPivBrazoIzq);
+		staticShader.setMat4("model", modelTempCatrina);
+		CatrinaBrazoIzq.Draw(staticShader);
+
+		// Cubos rojos guía de los pivotes: solo en modo catrina y con el baile pausado
+		if (modoCatrina && catMostrarPivotes && !catBaile)
+		{
+			myShader.use();
+			glm::vec3 pivotes[3] = { catPivCabeza, catPivBrazoDer, catPivBrazoIzq };
+			for (int p = 0; p < 3; p++)
+			{
+				glm::mat4 mPiv = glm::translate(modelCuerpoCatrina, pivotes[p]);
+				mPiv = glm::scale(mPiv, glm::vec3(catEscalaMarcador));
+				myShader.setMat4("model", mPiv);
+				myShader.setVec3("aColor", 1.0f, 0.0f, 0.0f);
+				//glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+			staticShader.use();
+		}*/
+
 		// -------------------------------------------------------------------------------------------------------------------------
 		// Marcador del personaje (solo en la vista cenital)
 		// Cuadro rojo = posición del personaje, cuadro amarillo = hacia dónde mira.
@@ -1500,6 +2130,8 @@ int main() {
 			glBindVertexArray(0);
 		}*/
 
+		// Dibujar las barras cinematográficas encima de todo
+		dibujarBarrasCinematicas(myShader);
 
 		//------------------------------------------------------------------------------------
 		//IMPORTANTE
@@ -1569,16 +2201,48 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && person==false)
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && person == false) {
 		camera.ProcessKeyboard(FORWARD, (float)deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && person == false)
+		modoCinematico = false;
+	}
+		
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && person == false) {
 		camera.ProcessKeyboard(BACKWARD, (float)deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && person == false)
+		modoCinematico = false;
+	}
+		
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && person == false) {
 		camera.ProcessKeyboard(LEFT, (float)deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && person == false)
+		modoCinematico = false;
+	}
+		
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && person == false) {
 		camera.ProcessKeyboard(RIGHT, (float)deltaTime);
+		modoCinematico = false;
+	}
+		
 	
-	
+	// Tecla O: comenzar a colocar sillas
+	if (key == GLFW_KEY_O && action == GLFW_PRESS)
+	{
+		if (!colocandoSillas && !quitandoSillas &&
+			sillasColocadas == 0)
+		{
+			colocandoSillas = true;
+			tiempoSilla = 0.0f;
+		}
+	}
+
+	// Tecla K: comenzar a quitar sillas
+	if (key == GLFW_KEY_K && action == GLFW_PRESS)
+	{
+		if (hileraCompleta && !quitandoSillas)
+		{
+			quitandoSillas = true;
+			tiempoSilla = 0.0f;
+		}
+	}
+
 
 	//To Configure Model
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && person == true)
@@ -1586,12 +2250,14 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 		posX += direccion.x * velocidad;
 		posZ += direccion.z * velocidad;
 		perspect = true;
+		modoCinematico = false;
 	}
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && person == true)
 	{
 		posX -= direccion.x * velocidad;
 		posZ -= direccion.z * velocidad;
 		perspect = true;
+		modoCinematico = false;
 	}
 		//posZ -= 5.0f * deltaTime;
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && person == true)
@@ -1599,17 +2265,24 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 		posX -= direccion.z * velocidad;
 		posZ += direccion.x * velocidad;
 		perspect = true;
+		modoCinematico = false;
 	}
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && person == true)
 	{
 		posX += direccion.z * velocidad;
 		posZ -= direccion.x * velocidad;
 		perspect = true;
+		modoCinematico = false;
 	}
-	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
 		person = false;
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+		modoCinematico = false;
+	}
+		
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
 		person = true;
+		modoCinematico = false;
+	}
 
 	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
 		lightPosition.x++;
@@ -1638,16 +2311,19 @@ void my_input(GLFWwindow* window, int key, int scancode, int action, int mode)
 	if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
 		person = false;
 		verEscen = true;
+		modoCinematico = false;
 	}
 
 	if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
 		person = false;
 		verAnim = true;
+		modoCinematico = true;
 	}
 
 	if (key == GLFW_KEY_3 && action == GLFW_PRESS) {
 		person = false;
 		verModel = true;
+		modoCinematico = true;
 	}
 
 	//To play KeyFrame animation 
@@ -1715,7 +2391,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 		cameraPitch += yoffset * mouseSensitivity * 3;
 
 		// Limitar la inclinación para evitar que la cámara dé vueltas
-		cameraPitch = glm::clamp(cameraPitch, -10.0f, 120.0f);
+		cameraPitch = glm::clamp(cameraPitch, -10.0f, 200.0f);
 	}
 	else {
 		camera.ProcessMouseMovement(xoffset, yoffset);

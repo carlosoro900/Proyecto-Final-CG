@@ -1,0 +1,20 @@
+# 3ds Max Wavefront OBJ Exporter v0.99 - (c)2007 guruware
+# File Created: 17.11.2026 13:21:19
+
+newmtl Picnic_Table
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 1.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Picnic_Table_baseColor.png
+	map_Pr Picnic_Table_metallicRoughness_G.png
+	map_Pm Picnic_Table_metallicRoughness_B.png
+	norm Picnic_Table_normal.png

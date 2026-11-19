@@ -1,0 +1,77 @@
+# 3ds Max Wavefront OBJ Exporter v0.99 - (c)2007 guruware
+# File Created: 16.11.2026 21:05:21
+
+newmtl Vgx_CitrusFBXASC032aurantiumFBXASC03201_bark
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Vgx-CitrusFBXASC032aurantiumFBXASC03201-bark_baseColor.jpeg
+
+newmtl Vgx_CitrusFBXASC032aurantiumFBXASC03201_branchFBXASC032T1
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Vgx-CitrusFBXASC032aurantiumFBXASC03201-branchFBXASC032T1_baseColor.jpeg
+
+newmtl Vgx_CitrusFBXASC032aurantiumFBXASC03201_branchFBXASC032T1_ncl1_1
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Vgx-CitrusFBXASC032aurantiumFBXASC03201-branchFBXASC032T1_baseColor.jpeg
+
+newmtl Vgx_CitrusFBXASC032aurantiumFBXASC03201_branchFBXASC032T4
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 1.0000
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Vgx-CitrusFBXASC032aurantiumFBXASC03201-branchFBXASC032T1_baseColor.jpeg
+
+newmtl Vgx_CitrusFBXASC032aurantiumFBXASC03201_Leaves
+	Kd 1.0000 1.0000 1.0000
+	Ks 0.0000 0.0000 0.0000
+	Tr 0.0000
+	d 1.0000
+	Tf 1.0000 1.0000 1.0000
+	Pr 0.8153
+	Pm 0.0000
+	Pc 0.0000
+	Pcr 0.0000
+	Ni 1.5200
+	Ke 0.0000 0.0000 0.0000
+	illum 2
+	map_Kd Vgx-CitrusFBXASC032aurantiumFBXASC03201-Leaves_baseColor.jpeg
