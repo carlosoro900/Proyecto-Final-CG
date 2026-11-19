@@ -188,7 +188,7 @@ pandShakeInc = 0.0f;
 
 //Keyframes (Manipulación y dibujo)
 float	posX = 250.0f,
-		posY = 3.0f,
+		posY = 4.0f,
 		posZ = 360.0f,
 		anim1X = 122.0f,
 		anim1Y = -20.0f,
